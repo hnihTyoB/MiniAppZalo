@@ -1,3 +1,5 @@
+HEAD
+
 # Zalo Mini App
 
 ## Development
@@ -45,3 +47,7 @@
 - [DevTools Documentation](https://mini.zalo.me/docs/dev-tools/)
 - [Ready-made Mini App Templates](https://mini.zalo.me/zaui-templates)
 - [Community Support](https://mini.zalo.me/community)
+
+# ZaloMiniApp
+
+4e8cf6f4d620c12ac5328f65cc138836fd6c03e9
