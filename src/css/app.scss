@@ -1,0 +1,51 @@
+.page {
+  padding: 16px 16px 96px 16px;
+}
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0; /* Tùy chọn: Đảm bảo không có margin mặc định */
+  padding: 0; /* Tùy chọn: Đảm bảo không có padding mặc định */
+  overflow: hidden; /* Tùy chọn: Ngăn scroll không mong muốn ở cấp độ body */
+}
+.section-container {
+  padding: 16px;
+  background: #ffffff;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.zaui-list-item {
+  cursor: pointer;
+}
+.zaui-select-option {
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  // Khi hover (giữ nguyên hoặc thay đổi tùy ý)
+  &:hover {
+    background-color: #fff6ec !important; // Màu orange-200 (cam nhạt)
+    color: #c2410c !important; // Màu orange-700 (chữ cam đậm)
+  }
+
+  // Khi được chọn (selected/active)
+  // !!! Vẫn cần kiểm tra lại class chính xác bằng DevTools !!!
+  &.zaui-select-option-selected,
+  &.zaui-select-option-active {
+    color: #f97316 !important; // Màu orange-500 (cam chính)
+  }
+}
+.zaui-input-affix-wrapper.zaui-select {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease; // Thêm transition cho mượt
+  &:hover {
+    border-color: #f97316 !important;
+    border-width: 2px !important;
+    box-shadow: none !important;
+  }
+  &:focus-within {
+    border-color: #f97316 !important;
+    border-width: 2px !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+}
