@@ -91,7 +91,7 @@ const Profile = () => {
                 </span>
               </div>
               {/* Thay thế '>' bằng icon ChevronRight */}
-              <ChevronRight size={18} className="text-gray-400" />
+              <ChevronRight size={20} className="text-gray-400" />
             </button>
           ))}
         </div>

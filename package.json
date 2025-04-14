@@ -28,6 +28,7 @@
     "jotai": "^2.12.1",
     "lucide-react": "^0.487.0",
     "react": "^18.3.1",
+    "react-calendar": "^5.1.0",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.5.0",
     "swiper": "^11.2.6",

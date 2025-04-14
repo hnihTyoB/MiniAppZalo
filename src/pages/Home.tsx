@@ -2,9 +2,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
-// Import Swiper modules
 import { Autoplay, Pagination } from "swiper/modules";
-// Import Swiper styles
 import "swiper/css";
 import "swiper/css/pagination";
 import {
@@ -21,18 +19,24 @@ import {
   CalendarDays,
   MessageCircle,
   User,
+  // Building, // <<< Không cần nữa nếu hiển thị list
 } from "lucide-react";
 
-// --- Định nghĩa kiểu dữ liệu cho dịch vụ và mục điều hướng ---
+// --- Interfaces ---
 interface ServiceItem {
   icon: React.ElementType;
   label: string;
 }
-
 interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
+}
+interface Branch {
+  id: number;
+  name: string;
+  imageUrl?: string;
+  address?: string;
 }
 
 // --- Mảng dữ liệu tĩnh ---
@@ -42,52 +46,74 @@ const services: ServiceItem[] = [
   { icon: Droplet, label: "Thay dầu" },
   { icon: ShowerHead, label: "Rửa xe" },
 ];
-
 const navItems: NavItem[] = [
   { icon: HomeIcon, label: "Home", path: "/home" },
   { icon: CalendarDays, label: "Bookings", path: "/bookings" },
   { icon: MessageCircle, label: "Chat", path: "/chat" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
+const availableBranches: Branch[] = [
+  {
+    id: 1,
+    name: "PTIT - Chi nhánh 1",
+    address: "97 Man Thiện, Thủ Đức",
+    imageUrl: "/images/branch-1.jpg", // <<< Đảm bảo đường dẫn ảnh đúng
+  },
+  {
+    id: 2,
+    name: "PTIT - Chi nhánh 2",
+    address: "122 Hoàng Diệu 2, Thủ Đức",
+    imageUrl: "/images/branch-2.jpg", // <<< Đảm bảo đường dẫn ảnh đúng
+  },
+  { id: 3, name: "Chi nhánh Quận 9", address: "45 Lê Văn Việt, Quận 9" },
+  // Thêm chi nhánh khác nếu cần
+];
 
 const Home = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  // <<< XÓA: State selectedBranch không cần thiết cho kiểu hiển thị này >>>
+  // const [selectedBranch, setSelectedBranch] = useState<Branch | null>(
+  //   availableBranches[0] || null
+  // );
 
+  // --- Handlers ---
   const handleViewAll = (section: string) => {
     console.log(`Xem tất cả ${section}`);
-    // navigate(`/list/${section.toLowerCase()}`);
+    // Nếu là xem tất cả chi nhánh, có thể điều hướng đến trang danh sách chi nhánh
+    // if (section === 'Chi nhánh') {
+    //   navigate('/branches');
+    // }
   };
   const handleServiceClick = (serviceLabel: string) => {
     console.log(`Clicked on service: ${serviceLabel}`);
-    // Sau này bạn có thể thêm logic điều hướng ở đây
     // navigate(`/service/${serviceLabel.toLowerCase().replace(' ', '-')}`);
   };
 
+  // <<< SỬA: Handler khi click vào một chi nhánh >>>
+  const handleBranchClick = (branch: Branch) => {
+    console.log(`Clicked on branch: ${branch.name}`);
+    // Điều hướng đến trang chi tiết và truyền ID (hoặc toàn bộ object) qua state
+    navigate("/branch-detail", { state: { branchData: branch } });
+    // Lưu ý: Trang BranchDetail.tsx hiện tại chưa sử dụng state này,
+    // bạn cần cập nhật BranchDetail.tsx để lấy và hiển thị dữ liệu từ state.
+  };
+
+  // <<< XÓA: Các handler handleSelectBranch và handleChooseOrChangeBranch không cần nữa >>>
+
   const currentPath = window.location.pathname;
 
-  // --- CSS tùy chỉnh cho Swiper Pagination ---
+  // --- CSS Swiper (giữ nguyên) ---
   const swiperPaginationStyle = `
-    .swiper-pagination-bullet {
-      background-color: #9ca3af; /* Màu cam nhạt cho chấm không active (orange-400) */
-      opacity: 0.5; /* Làm mờ đi một chút */
-    }
-    .swiper-pagination-bullet-active {
-      background-color: #f97316; /* Màu cam đậm hơn cho chấm active (orange-500) */
-      opacity: 1;
-    }
-    .swiper-container-horizontal > .swiper-pagination-bullets, .swiper-pagination-custom, .swiper-pagination-fraction {
-      bottom: 4px; /* Điều chỉnh vị trí của pagination lên một chút nếu cần */
-    }
+    .swiper-pagination-bullet { background-color: #9ca3af; opacity: 0.5; }
+    .swiper-pagination-bullet-active { background-color: #f97316; opacity: 1; }
+    .swiper-container-horizontal > .swiper-pagination-bullets, .swiper-pagination-custom, .swiper-pagination-fraction { bottom: 4px; }
   `;
-  // --- Kết thúc CSS tùy chỉnh ---
 
   return (
     <div className="flex flex-col h-screen bg-white pb-20 overflow-y-auto">
-      {/* Thêm thẻ style vào đây */}
       <style>{swiperPaginationStyle}</style>
 
-      {/* Phần nội dung chính có padding */}
       <div className="p-4 flex-grow">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
@@ -99,9 +125,7 @@ const Home = () => {
             </div>
           </div>
           <button onClick={() => navigate("/notifications")} className="p-1">
-            {/* <<< THAY ĐỔI MÀU ICON CHUÔNG */}
             <Bell className="w-6 h-6 text-orange-500 hover:text-orange-600" />
-            {/* <<< KẾT THÚC THAY ĐỔI */}
           </button>
         </div>
 
@@ -123,8 +147,6 @@ const Home = () => {
 
         {/* Khuyến mãi */}
         <div className="mb-6 relative">
-          {" "}
-          {/* Giữ mb-6 và relative */}
           <div className="flex justify-between items-center mb-3">
             <h2 className="font-bold text-lg">Khuyến mãi</h2>
             <button
@@ -140,9 +162,9 @@ const Home = () => {
             autoplay={{ delay: 3000, disableOnInteraction: false }}
             loop
             pagination={{ clickable: true }}
-            className="rounded-xl overflow-hidden pb-8" // Giữ padding-bottom
+            className="rounded-xl overflow-hidden pb-8"
           >
-            {/* Các SwiperSlide giữ nguyên */}
+            {/* Slides khuyến mãi giữ nguyên */}
             <SwiperSlide>
               <div className="bg-orange-100 p-4 rounded-xl relative aspect-[2/1] flex flex-col justify-between">
                 <div>
@@ -209,24 +231,19 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-4 gap-4 text-center text-xs sm:text-sm text-gray-600">
             {services.map((service, index) => (
-              // <<< THÊM onClick, cursor-pointer VÀO ĐÂY >>>
               <div
                 key={index}
-                onClick={() => handleServiceClick(service.label)} // Gọi hàm xử lý khi click
-                className="flex flex-col items-center gap-1.5 cursor-pointer group" // Thêm cursor-pointer và group (cho hover effect nếu muốn)
-                role="button" // Thêm role cho accessibility
-                tabIndex={0} // Cho phép focus bằng bàn phím
+                onClick={() => handleServiceClick(service.label)}
+                className="flex flex-col items-center gap-1.5 cursor-pointer group"
+                role="button"
+                tabIndex={0}
                 onKeyDown={(e) => {
-                  // Cho phép kích hoạt bằng Enter/Space
                   if (e.key === "Enter" || e.key === " ") {
                     handleServiceClick(service.label);
                   }
                 }}
               >
-                {/* <<< KẾT THÚC THAY ĐỔI >>> */}
                 <div className="bg-gray-100 group-hover:bg-orange-100 p-3 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-200">
-                  {" "}
-                  {/* Thêm hiệu ứng hover */}
                   <service.icon className="w-6 h-6 text-orange-500" />
                 </div>
                 <span className="font-medium">{service.label}</span>
@@ -235,10 +252,12 @@ const Home = () => {
           </div>
         </div>
 
-        {/* Chi nhánh */}
-        <div className="mb-4">
+        {/* ========== BẮT ĐẦU SỬA PHẦN CHI NHÁNH ========== */}
+        <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
+            {/* Giữ lại tiêu đề */}
             <h2 className="font-bold text-lg">Chi nhánh</h2>
+            {/* Giữ lại nút Xem tất cả */}
             <button
               onClick={() => handleViewAll("Chi nhánh")}
               className="text-orange-400 text-sm font-medium hover:underline cursor-pointer"
@@ -246,18 +265,67 @@ const Home = () => {
               Xem tất cả
             </button>
           </div>
-          <div className="space-y-3">
-            {[1, 2, 3, 4].map((item) => (
-              <div
-                key={item}
-                className="w-full aspect-video bg-gray-100 rounded-lg flex items-center justify-center cursor-pointer hover:opacity-90 overflow-hidden"
-              >
-                <ImageIcon className="w-12 h-12 text-gray-400" />
-                {/* <img src={`/images/branch-${item}.jpg`} alt={`Chi nhánh ${item}`} className="w-full h-full object-cover" /> */}
-              </div>
-            ))}
+          {/* Hiển thị danh sách các chi nhánh */}
+          <div className="space-y-4">
+            {" "}
+            {/* Thêm khoảng cách giữa các chi nhánh */}
+            {availableBranches.slice(0, 3).map(
+              (
+                branch // Chỉ hiển thị 3 chi nhánh đầu tiên (ví dụ)
+              ) => (
+                <div
+                  key={branch.id}
+                  onClick={() => handleBranchClick(branch)} // Gọi hàm điều hướng khi click
+                  className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200" // Thêm cursor và hiệu ứng hover
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    // Accessibility
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleBranchClick(branch);
+                    }
+                  }}
+                >
+                  {branch.imageUrl ? (
+                    <div className="w-full aspect-video bg-gray-100">
+                      <img
+                        src={branch.imageUrl}
+                        alt={branch.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
+                      <ImageIcon className="w-12 h-12 text-gray-400" />
+                    </div>
+                  )}
+                  <div className="p-3">
+                    {" "}
+                    {/* Giảm padding một chút */}
+                    <div className="font-semibold text-base truncate mb-0.5">
+                      {" "}
+                      {/* Giảm margin bottom */}
+                      {branch.name}
+                    </div>
+                    {branch.address && (
+                      <div className="text-sm text-gray-500 flex items-center gap-1">
+                        <MapPin size={14} className="flex-shrink-0" />
+                        <span className="truncate">{branch.address}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            )}
+            {/* Hiển thị thông báo nếu không có chi nhánh */}
+            {availableBranches.length === 0 && (
+              <p className="text-center text-gray-500 mt-4">
+                Chưa có chi nhánh nào.
+              </p>
+            )}
           </div>
         </div>
+        {/* ========== KẾT THÚC SỬA PHẦN CHI NHÁNH ========== */}
       </div>
 
       {/* Bottom Navigation */}

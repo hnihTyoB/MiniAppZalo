@@ -1,5 +1,5 @@
 // src/pages/Notifications.tsx
-import { useState } from "react";
+import React, { useState, useEffect } from "react"; // <<< THÊM useEffect
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Filter, Image as ImageIcon, ChevronLeft } from "lucide-react";
 
-// --- interface ScheduleItem and initialMockData (giữ nguyên) ---
+// --- interface ScheduleItem ---
 interface ScheduleItem {
   id: string;
   branch: string;
@@ -19,6 +19,7 @@ interface ScheduleItem {
   imageUrl?: string;
 }
 
+// --- Dữ liệu mẫu ban đầu ---
 const initialMockData: ScheduleItem[] = [
   {
     id: "#549493",
@@ -66,26 +67,46 @@ const initialMockData: ScheduleItem[] = [
     status: "done",
   },
 ];
-// --- Kết thúc interface và data ---
 
 export default function Notifications() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  // <<< SỬA: Khởi tạo state với dữ liệu mẫu ban đầu >>>
   const [items, setItems] = useState<ScheduleItem[]>(initialMockData);
 
+  // <<< THÊM: useEffect để đọc và thêm lịch hẹn mới từ localStorage >>>
+  useEffect(() => {
+    try {
+      const newlyAddedBookingsRaw = localStorage.getItem("newlyAddedBookings");
+      if (newlyAddedBookingsRaw) {
+        const newlyAddedBookings: ScheduleItem[] = JSON.parse(
+          newlyAddedBookingsRaw
+        );
+        if (newlyAddedBookings.length > 0) {
+          // Thêm lịch hẹn mới vào đầu danh sách hiện tại
+          setItems((prevItems) => [...newlyAddedBookings, ...prevItems]);
+          // Xóa dữ liệu đã đọc khỏi localStorage
+          localStorage.removeItem("newlyAddedBookings");
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi đọc lịch hẹn từ localStorage:", error);
+      // Xóa nếu dữ liệu bị lỗi
+      localStorage.removeItem("newlyAddedBookings");
+    }
+  }, []); // Chỉ chạy một lần khi component mount
+
+  // --- Các hàm xử lý khác (giữ nguyên) ---
   const goBack = () => {
     navigate(-1);
   };
-
   const handleClearDone = () => {
     setItems((prev) => prev.filter((item) => item.status !== "done"));
   };
-
   const handleCancelAppointment = (id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
     console.log(`Hủy lịch hẹn có ID: ${id}`);
   };
-
   const handleReminderChange = (id: string, checked: boolean) => {
     setItems((prev) =>
       prev.map((item) =>
@@ -95,6 +116,7 @@ export default function Notifications() {
     console.log(`Thay đổi nhắc nhở cho ID ${id} thành ${checked}`);
   };
 
+  // --- Logic lọc (giữ nguyên) ---
   const filteredItems = items.filter(
     (item) =>
       item.branch.toLowerCase().includes(search.toLowerCase()) ||
@@ -103,12 +125,9 @@ export default function Notifications() {
   );
 
   return (
-    // <<< 2. Bỏ pt-16 khỏi container chính
     <div className="h-full overflow-y-auto bg-white pb-20 max-w-md mx-auto relative">
-      {/* <<< 1. Header: Đổi fixed thành sticky top-0, giữ z-index cao hơn search */}
+      {/* Header */}
       <div className="sticky top-0 h-16 px-4 flex items-center justify-center bg-white z-20 border-b">
-        {" "}
-        {/* Thêm lại border-b ở đây */}
         <button
           onClick={goBack}
           className="absolute left-4 top-1/2 -translate-y-1/2 p-2 -ml-2"
@@ -117,12 +136,9 @@ export default function Notifications() {
         </button>
         <h1 className="text-xl font-semibold text-gray-800">Notifications</h1>
       </div>
-      {/* Kết thúc Header */}
 
-      {/* <<< 3. Thanh tìm kiếm: Cập nhật top thành top-16 (chiều cao header), giữ z-10 */}
+      {/* Thanh tìm kiếm */}
       <div className="sticky top-16 flex gap-2 items-center bg-white z-10 px-4 py-2 border-b">
-        {" "}
-        {/* Thêm lại py-2, giữ px-4 */}
         <Input
           placeholder="Tìm kiếm lịch hẹn..."
           value={search}
@@ -137,9 +153,9 @@ export default function Notifications() {
         </Button>
       </div>
 
-      {/* Bọc nội dung cuộn chính */}
+      {/* Nội dung cuộn */}
       <div className="p-4 space-y-4">
-        {/* Danh sách lịch hẹn (giữ nguyên) */}
+        {/* Danh sách lịch hẹn */}
         {filteredItems.length > 0 ? (
           filteredItems.map((item) => (
             <Card key={item.id} className="overflow-hidden shadow-sm">
@@ -205,7 +221,7 @@ export default function Notifications() {
           </p>
         )}
 
-        {/* Nút Dọn dẹp (giữ nguyên) */}
+        {/* Nút Dọn dẹp */}
         {items.some((item) => item.status === "done") && (
           <Button
             className="w-full bg-orange-400 hover:bg-orange-500 text-white rounded-xl mt-4 py-2.5"
