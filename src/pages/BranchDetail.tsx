@@ -113,7 +113,7 @@ const BranchDetail = () => {
                 className="text-yellow-400 mr-1 fill-yellow-400"
               />
               <span className="font-medium">4.8</span>
-              <span className="text-gray-400 ml-1">(234)</span>{" "}
+              <span className="text-gray-400 ml-1">(234 đánh giá)</span>{" "}
               {/* TODO: Lấy rating từ data */}
             </div>
           </div>

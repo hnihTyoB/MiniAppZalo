@@ -68,6 +68,17 @@ const availableBranches: Branch[] = [
   { id: 3, name: "Chi nhánh Quận 9", address: "45 Lê Văn Việt, Quận 9" },
   // Thêm chi nhánh khác nếu cần
 ];
+const normalizeServiceName = (name: string): string => {
+  return (
+    name
+      .toLowerCase()
+      // Bỏ dấu tiếng Việt
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      // Thay khoảng trắng bằng gạch nối
+      .replace(/\s+/g, "-")
+  );
+};
 
 const Home = () => {
   const navigate = useNavigate();
@@ -80,14 +91,18 @@ const Home = () => {
   // --- Handlers ---
   const handleViewAll = (section: string) => {
     console.log(`Xem tất cả ${section}`);
-    // Nếu là xem tất cả chi nhánh, có thể điều hướng đến trang danh sách chi nhánh
-    // if (section === 'Chi nhánh') {
-    //   navigate('/branches');
-    // }
+    if (section === "Chi nhánh") {
+      navigate("/branches"); // <<< ĐIỀU HƯỚNG ĐẾN TRANG DANH SÁCH CHI NHÁNH >>>
+    } else if (section === "Khuyến mãi") {
+      // navigate('/promotions'); // Ví dụ điều hướng khác
+    } else if (section === "Dịch vụ") {
+      // navigate('/services'); // Ví dụ điều hướng khác
+    }
   };
   const handleServiceClick = (serviceLabel: string) => {
-    console.log(`Clicked on service: ${serviceLabel}`);
-    // navigate(`/service/${serviceLabel.toLowerCase().replace(' ', '-')}`);
+    const serviceId = normalizeServiceName(serviceLabel); // Chuẩn hóa tên thành ID
+    console.log(`Navigating to service detail: ${serviceId}`);
+    navigate(`/service/${serviceId}`); // Điều hướng đến trang chi tiết
   };
 
   // <<< SỬA: Handler khi click vào một chi nhánh >>>
@@ -252,12 +267,11 @@ const Home = () => {
           </div>
         </div>
 
-        {/* ========== BẮT ĐẦU SỬA PHẦN CHI NHÁNH ========== */}
+        {/*CHI NHÁNH*/}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
-            {/* Giữ lại tiêu đề */}
             <h2 className="font-bold text-lg">Chi nhánh</h2>
-            {/* Giữ lại nút Xem tất cả */}
+            {/* Nút này giờ sẽ điều hướng đúng */}
             <button
               onClick={() => handleViewAll("Chi nhánh")}
               className="text-orange-400 text-sm font-medium hover:underline cursor-pointer"
@@ -265,59 +279,48 @@ const Home = () => {
               Xem tất cả
             </button>
           </div>
-          {/* Hiển thị danh sách các chi nhánh */}
+          {/* Hiển thị danh sách các chi nhánh (giữ nguyên) */}
           <div className="space-y-4">
-            {" "}
-            {/* Thêm khoảng cách giữa các chi nhánh */}
-            {availableBranches.slice(0, 3).map(
-              (
-                branch // Chỉ hiển thị 3 chi nhánh đầu tiên (ví dụ)
-              ) => (
-                <div
-                  key={branch.id}
-                  onClick={() => handleBranchClick(branch)} // Gọi hàm điều hướng khi click
-                  className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200" // Thêm cursor và hiệu ứng hover
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    // Accessibility
-                    if (e.key === "Enter" || e.key === " ") {
-                      handleBranchClick(branch);
-                    }
-                  }}
-                >
-                  {branch.imageUrl ? (
-                    <div className="w-full aspect-video bg-gray-100">
-                      <img
-                        src={branch.imageUrl}
-                        alt={branch.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
-                      <ImageIcon className="w-12 h-12 text-gray-400" />
+            {availableBranches.slice(0, 3).map((branch) => (
+              <div
+                key={branch.id}
+                onClick={() => handleBranchClick(branch)}
+                className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    handleBranchClick(branch);
+                  }
+                }}
+              >
+                {/* ... (code hiển thị ảnh và text chi nhánh giữ nguyên) ... */}
+                {branch.imageUrl ? (
+                  <div className="w-full aspect-video bg-gray-100">
+                    <img
+                      src={branch.imageUrl}
+                      alt={branch.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
+                    <ImageIcon className="w-12 h-12 text-gray-400" />
+                  </div>
+                )}
+                <div className="p-3">
+                  <div className="font-semibold text-base truncate mb-0.5">
+                    {branch.name}
+                  </div>
+                  {branch.address && (
+                    <div className="text-sm text-gray-500 flex items-center gap-1">
+                      <MapPin size={14} className="flex-shrink-0" />
+                      <span className="truncate">{branch.address}</span>
                     </div>
                   )}
-                  <div className="p-3">
-                    {" "}
-                    {/* Giảm padding một chút */}
-                    <div className="font-semibold text-base truncate mb-0.5">
-                      {" "}
-                      {/* Giảm margin bottom */}
-                      {branch.name}
-                    </div>
-                    {branch.address && (
-                      <div className="text-sm text-gray-500 flex items-center gap-1">
-                        <MapPin size={14} className="flex-shrink-0" />
-                        <span className="truncate">{branch.address}</span>
-                      </div>
-                    )}
-                  </div>
                 </div>
-              )
-            )}
-            {/* Hiển thị thông báo nếu không có chi nhánh */}
+              </div>
+            ))}
             {availableBranches.length === 0 && (
               <p className="text-center text-gray-500 mt-4">
                 Chưa có chi nhánh nào.
@@ -325,7 +328,6 @@ const Home = () => {
             )}
           </div>
         </div>
-        {/* ========== KẾT THÚC SỬA PHẦN CHI NHÁNH ========== */}
       </div>
 
       {/* Bottom Navigation */}

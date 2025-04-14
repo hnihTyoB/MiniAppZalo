@@ -1,5 +1,5 @@
 // src/pages/Bookings.tsx
-import React, { useState, useEffect } from "react"; // <<< THÊM useEffect
+import React, { useState } from "react"; // Bỏ useEffect nếu không dùng nữa
 import { useNavigate } from "react-router-dom";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
@@ -16,11 +16,11 @@ import {
   ImageIcon,
   MapPin,
   Building,
-  CheckCircle, // <<< THÊM ICON CHO POPUP
-  X, // <<< THÊM ICON ĐÓNG POPUP
+  // CheckCircle, // <<< BỎ ICON POPUP
+  // X, // <<< BỎ ICON POPUP
 } from "lucide-react";
 
-// --- Interfaces và Constants (giữ nguyên) ---
+// --- Interfaces và Constants ---
 interface NavItem {
   icon: React.ElementType;
   label: string;
@@ -42,6 +42,7 @@ interface Branch {
   imageUrl?: string;
   address?: string;
 }
+// Interface cho dữ liệu lưu vào localStorage (giống ScheduleItem ở Notifications)
 interface ScheduleItem {
   id: string;
   branch: string;
@@ -51,29 +52,46 @@ interface ScheduleItem {
   reminder: boolean;
   status: "upcoming" | "done";
   imageUrl?: string;
+  address?: string; // Thêm address nếu cần
 }
+
+// Hàm chuẩn hóa tên dịch vụ thành ID (nếu cần dùng để điều hướng)
+const normalizeServiceName = (name: string): string => {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-");
+};
 
 const Booking = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+
+  // Dữ liệu services
   const services: Service[] = [
     { name: "Sửa xe", icon: Wrench },
     { name: "Thay kính", icon: Square },
     { name: "Thay dầu", icon: Droplet },
     { name: "Rửa xe", icon: ShowerHead },
   ];
+
+  // State cho các lựa chọn
   const [selectedServiceName, setSelectedServiceName] = useState<string | null>(
-    services[0]?.name || null
+    services[0]?.name || null // Mặc định chọn dịch vụ đầu tiên
   );
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>({
     id: 1,
     name: "PTIT - Chi nhánh 1",
     address: "97 Man Thiện, Thủ Đức",
-    imageUrl: "/images/branch-1.jpg",
+    imageUrl: "/images/branch-1.jpg", // Mặc định chọn chi nhánh đầu tiên
   });
+
   const currentPath = window.location.pathname;
   const times = ["07:00 PM", "10:00 AM", "01:00 PM", "03:00 PM", "04:30 PM"];
+
+  // Dữ liệu chi nhánh mẫu (nên lấy từ API)
   const availableBranches: Branch[] = [
     {
       id: 1,
@@ -90,9 +108,9 @@ const Booking = () => {
     { id: 3, name: "Chi nhánh Quận 9", address: "45 Lê Văn Việt, Quận 9" },
   ];
 
-  // <<< THÊM: State cho popup >>>
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-  const [popupMessage, setPopupMessage] = useState("");
+  // <<< BỎ State cho popup >>>
+  // const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  // const [popupMessage, setPopupMessage] = useState("");
 
   // --- Handlers ---
   const handleDateChange = (value: any) => {
@@ -105,7 +123,7 @@ const Booking = () => {
     }
   };
 
-  // <<< SỬA: handleBooking để hiển thị popup >>>
+  // <<< SỬA: handleBooking để điều hướng >>>
   const handleBooking = () => {
     console.log("Checking booking readiness:", {
       selectedServiceName,
@@ -120,6 +138,7 @@ const Booking = () => {
     });
 
     if (selectedServiceName && selectedBranch && selectedDate && selectedTime) {
+      // 1. Tạo đối tượng lịch hẹn mới
       const newBooking: ScheduleItem = {
         id: `#${Date.now().toString().slice(-6)}`,
         branch: selectedBranch.name,
@@ -135,19 +154,11 @@ const Booking = () => {
         reminder: false,
         status: "upcoming",
         imageUrl: selectedBranch.imageUrl,
+        // Thêm address nếu cần hiển thị ở trang success
+        address: selectedBranch.address,
       };
 
-      // 2. Chuẩn bị và hiển thị popup thành công
-      const successMessage = `Đặt lịch ${newBooking.service} tại ${newBooking.branch} thành công vào ngày ${newBooking.date} lúc ${newBooking.time}`;
-      setPopupMessage(successMessage);
-      setShowSuccessPopup(true);
-
-      // Tự động ẩn popup sau 3 giây
-      setTimeout(() => {
-        setShowSuccessPopup(false);
-      }, 5000); // 3000ms = 3 giây
-
-      // 3. Lưu vào localStorage
+      // 2. Lưu vào localStorage
       try {
         const existingBookings = JSON.parse(
           localStorage.getItem("newlyAddedBookings") || "[]"
@@ -160,8 +171,20 @@ const Booking = () => {
       } catch (error) {
         console.error("Lỗi khi lưu lịch hẹn vào localStorage:", error);
       }
+
+      // 3. Điều hướng đến trang xác nhận và truyền dữ liệu
+      // Đổi tên trang thành BookingConfirmation cho khớp với tên file component
+      navigate("/booking-confirmation", {
+        state: { bookingDetails: newBooking },
+      });
+
+      // <<< BỎ HIỂN THỊ POPUP >>>
+      // const successMessage = `Đặt lịch ${newBooking.service} tại ${newBooking.branch} thành công vào ngày ${newBooking.date} lúc ${newBooking.time}`;
+      // setPopupMessage(successMessage);
+      // setShowSuccessPopup(true);
+      // setTimeout(() => { setShowSuccessPopup(false); }, 5000);
     } else {
-      // Thông báo lỗi nếu thiếu thông tin (vẫn dùng alert cho lỗi)
+      // Thông báo lỗi nếu thiếu thông tin
       let missingFields = [];
       if (!selectedServiceName) missingFields.push("dịch vụ");
       if (!selectedBranch) missingFields.push("chi nhánh");
@@ -175,11 +198,14 @@ const Booking = () => {
   const handleServiceClick = (serviceName: string) => {
     setSelectedServiceName(serviceName);
     console.log(`Selected service in Booking: ${serviceName}`);
+    // Optional: Điều hướng đến trang chi tiết dịch vụ
+    // const serviceId = normalizeServiceName(serviceName);
+    // navigate(`/service/${serviceId}`);
   };
 
   const handleViewAllServices = () => {
     console.log("Clicked 'Thay đổi' for services");
-    setSelectedServiceName(null);
+    setSelectedServiceName(null); // Cho phép chọn lại
   };
 
   const handleSelectBranch = (branch: Branch) => {
@@ -187,6 +213,7 @@ const Booking = () => {
     console.log(`Selected branch: ${branch.name}`);
   };
 
+  // Handler để mở modal/trang chọn chi nhánh (hiện dùng prompt)
   const handleChooseOrChangeBranch = () => {
     console.log("Clicked 'Chọn/Thay đổi' for branches - TODO: Open modal/page");
     const chosenBranchId = prompt(
@@ -206,23 +233,22 @@ const Booking = () => {
     }
   };
 
+  // Kiểm tra xem đã chọn đủ thông tin chưa
   const isBookingReady =
     !!selectedServiceName &&
     !!selectedBranch &&
     !!selectedDate &&
     !!selectedTime;
 
-  // <<< THÊM: Hàm đóng popup thủ công >>>
-  const closePopup = () => {
-    setShowSuccessPopup(false);
-  };
+  // <<< BỎ Hàm đóng popup >>>
+  // const closePopup = () => { setShowSuccessPopup(false); };
 
   return (
-    // <<< THÊM: relative để popup định vị đúng >>>
-    <div className="relative flex flex-col h-screen bg-white pb-36">
+    // <<< BỎ relative nếu không còn popup >>>
+    <div className="flex flex-col h-screen bg-white pb-36">
       {/* Header */}
       <div className="sticky top-0 flex items-center justify-center p-4 border-b bg-white z-10">
-        <h2 className="text-2xl font-semibold text-center">Đặt lịch</h2>
+        <h2 className="text-xl font-semibold text-center">Đặt lịch</h2>
       </div>
 
       {/* Nội dung chính */}
@@ -230,7 +256,7 @@ const Booking = () => {
         {/* Phần Dịch vụ */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
-            <h2 className="font-semibold text-lg">Dịch vụ</h2>
+            <h2 className="font-bold text-lg">Dịch vụ</h2>
             {selectedServiceName && (
               <button
                 onClick={handleViewAllServices}
@@ -299,10 +325,7 @@ const Booking = () => {
           {selectedBranch ? (
             <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
               {selectedBranch.imageUrl ? (
-                // <<< SỬA: Đổi lại aspect-video >>>
                 <div className="w-full aspect-video bg-gray-100">
-                  {" "}
-                  {/* Tỷ lệ 16:9 */}
                   <img
                     src={selectedBranch.imageUrl}
                     alt={selectedBranch.name}
@@ -310,10 +333,7 @@ const Booking = () => {
                   />
                 </div>
               ) : (
-                // <<< SỬA: Đổi lại aspect-video >>>
                 <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
-                  {" "}
-                  {/* Tỷ lệ 16:9 */}
                   <ImageIcon className="w-12 h-12 text-gray-400" />
                 </div>
               )}
@@ -341,7 +361,7 @@ const Booking = () => {
         <div>
           <h3 className="font-semibold text-lg mb-3">Chọn ngày</h3>
           <style>{`
-            /* ... CSS Calendar giữ nguyên ... */
+            /* CSS Calendar */
             .react-calendar { border: none; border-radius: 0.5rem; font-family: inherit; width: 100%; background-color: #f9fafb; padding: 0.5rem; }
             .react-calendar__tile { border-radius: 9999px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0.25rem; }
             .react-calendar__tile:enabled:hover, .react-calendar__tile:enabled:focus { background-color: #fed7aa; }
@@ -388,7 +408,7 @@ const Booking = () => {
         <button
           onClick={handleBooking}
           className={clsx(
-            "bg-orange-400 text-white w-full py-2 rounded-lg font-semibold text-lg transition-colors duration-200",
+            "bg-orange-400 text-white w-full py-3 rounded-lg font-semibold text-lg transition-colors duration-200",
             !isBookingReady
               ? "opacity-50 cursor-not-allowed"
               : "hover:bg-orange-500"
@@ -419,28 +439,8 @@ const Booking = () => {
         ))}
       </div>
 
-      {/* ========== THÊM POPUP THÔNG BÁO ========== */}
-      {showSuccessPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm w-full text-center relative">
-            {/* Nút đóng popup */}
-            <button
-              onClick={closePopup}
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-              aria-label="Đóng"
-            >
-              <X size={20} />
-            </button>
-            {/* Icon thành công */}
-            <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
-            {/* Tiêu đề */}
-            <h3 className="text-lg font-semibold mb-2">Đặt lịch thành công!</h3>
-            {/* Nội dung thông báo */}
-            <p className="text-sm text-gray-600">{popupMessage}</p>
-          </div>
-        </div>
-      )}
-      {/* ========== KẾT THÚC POPUP THÔNG BÁO ========== */}
+      {/* <<< BỎ JSX CỦA POPUP >>> */}
+      {/* {showSuccessPopup && ( ... )} */}
     </div>
   );
 };

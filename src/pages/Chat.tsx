@@ -23,17 +23,18 @@ interface BranchActivity {
   avatarUrl?: string;
   isActive: boolean;
 }
-// <<< SỬA: Interface MessagePreview >>>
+// Hợp nhất định nghĩa MessagePreview
 interface MessagePreview {
-  id: number;
+  id: number; // ID của cuộc trò chuyện (hoặc tin nhắn cuối)
+  branchId: number | string; // ID của chi nhánh
   name: string;
   message: string;
   avatarUrl?: string;
-  isUnreadByUser: boolean; // Đổi tên cho rõ: Tin nhắn này người dùng chưa đọc
+  isUnreadByUser: boolean; // Tin nhắn này người dùng chưa đọc
   recipientReadAvatarUrl?: string; // Avatar của người nhận nếu họ đã đọc tin nhắn cuối của bạn
 }
 
-// --- Dữ liệu mẫu (Cập nhật cấu trúc) ---
+// --- Dữ liệu mẫu ---
 const activeBranches: BranchActivity[] = [
   {
     id: 1,
@@ -66,41 +67,44 @@ const activeBranches: BranchActivity[] = [
   },
 ];
 
-// <<< SỬA: Dữ liệu messages >>>
 const messages: MessagePreview[] = [
   {
     id: 101,
+    branchId: 1,
     name: "Chi Nhánh 1 - Thủ Đức",
     message:
       "Bạn đã kết nối với Chi nhánh 1 - Thủ Đức. Chúng tôi có thể giúp gì cho bạn?",
-    isUnreadByUser: true, // Người dùng chưa đọc tin này
+    isUnreadByUser: true,
     avatarUrl: "/images/avatar-1.jpg",
-    // recipientReadAvatarUrl: undefined // Chi nhánh chưa đọc tin nhắn cuối của bạn
+    // recipientReadAvatarUrl: undefined
   },
   {
     id: 102,
+    branchId: 2,
     name: "Chi Nhánh 2 - Gò Vấp",
     message: "Bạn đã kết nối với Chi nhánh 2 - Gò Vấp. Xin chào!",
-    isUnreadByUser: false, // Người dùng đã đọc tin này
+    isUnreadByUser: false,
     avatarUrl: "/images/avatar-2.jpg",
-    recipientReadAvatarUrl: "/images/avatar-2.jpg", // Chi nhánh đã đọc tin nhắn cuối của bạn
+    recipientReadAvatarUrl: "/images/avatar-2.jpg",
   },
   {
     id: 103,
+    branchId: 3,
     name: "Chi Nhánh 3 - Quận 3",
     message:
       "Bạn đã kết nối với Chi nhánh 3 - Quận 3. Lịch hẹn của bạn đã được xác nhận.",
-    isUnreadByUser: false, // Người dùng đã đọc tin này
+    isUnreadByUser: false,
     avatarUrl: "/images/avatar-3.jpg",
-    // recipientReadAvatarUrl: undefined // Chi nhánh chưa đọc tin nhắn cuối của bạn
+    // recipientReadAvatarUrl: undefined
   },
   {
     id: 104,
+    branchId: 4,
     name: "Chi Nhánh 4 - Quận 10",
     message: "Bạn đã kết nối với Chi nhánh 4 - Quận 10. Cảm ơn bạn đã liên hệ.",
-    isUnreadByUser: true, // Người dùng chưa đọc tin này
+    isUnreadByUser: true,
     avatarUrl: "/images/avatar-4.jpg",
-    recipientReadAvatarUrl: "/images/avatar-4.jpg", // Chi nhánh đã đọc tin nhắn cuối của bạn
+    recipientReadAvatarUrl: "/images/avatar-4.jpg",
   },
 ];
 
@@ -116,10 +120,28 @@ const Chat = () => {
   const navigate = useNavigate();
   const currentPath = window.location.pathname;
 
-  const handleMessageClick = (messageId: number) => {
-    console.log(`Clicked message with ID: ${messageId}`);
-    // TODO: Điều hướng đến màn hình chat chi tiết
-    // navigate(`/chat/${messageId}`);
+  // Hàm xử lý khi click vào tin nhắn (điều hướng và truyền state)
+  const handleMessageClick = (messageData: MessagePreview) => {
+    console.log("Data being passed to navigate:", {
+      branchId: messageData.branchId,
+      branchInfoState: {
+        id: messageData.branchId,
+        name: messageData.name,
+        avatarUrl: messageData.avatarUrl,
+      },
+    });
+    // <<< SỬA ĐƯỜNG DẪN Ở ĐÂY >>>
+    navigate(`/conversation/${messageData.branchId}`, {
+      // Đổi "/chat/" thành "/conversation/"
+      state: {
+        branchInfo: {
+          id: messageData.branchId,
+          name: messageData.name,
+          avatarUrl: messageData.avatarUrl,
+          // Thêm isActive nếu cần và có trong messageData
+        },
+      },
+    });
   };
 
   return (
@@ -183,7 +205,7 @@ const Chat = () => {
           {messages.map((msg) => (
             <button
               key={msg.id}
-              onClick={() => handleMessageClick(msg.id)}
+              onClick={() => handleMessageClick(msg)}
               className="flex items-center w-full text-left p-2 rounded-lg hover:bg-gray-50 transition-colors duration-150"
             >
               {/* Avatar chính */}
@@ -206,24 +228,19 @@ const Chat = () => {
                 <p className="text-xs text-gray-500 truncate">{msg.message}</p>
               </div>
 
-              {/* <<< SỬA: Hiển thị avatar nhỏ nếu chi nhánh đã đọc >>> */}
-              {
-                msg.recipientReadAvatarUrl ? (
-                  // Hiển thị avatar nhỏ của người nhận
-                  <div className="w-4 h-4 rounded-full ml-2 flex-shrink-0 overflow-hidden">
-                    <img
-                      src={msg.recipientReadAvatarUrl}
-                      alt="Đã đọc"
-                      className="w-full h-full object-cover"
-                      title="Đã đọc" // Tooltip cho desktop
-                    />
-                  </div>
-                ) : msg.isUnreadByUser ? (
-                  // Hiển thị chấm xanh nếu người dùng chưa đọc (ưu tiên thấp hơn)
-                  <div className="w-2.5 h-2.5 bg-blue-500 rounded-full ml-2 flex-shrink-0" />
-                ) : null /* Không hiển thị gì khác */
-              }
-              {/* <<< KẾT THÚC SỬA >>> */}
+              {/* Hiển thị avatar nhỏ nếu chi nhánh đã đọc hoặc chấm xanh nếu user chưa đọc */}
+              {msg.recipientReadAvatarUrl ? (
+                <div className="w-4 h-4 rounded-full ml-2 flex-shrink-0 overflow-hidden">
+                  <img
+                    src={msg.recipientReadAvatarUrl}
+                    alt="Đã đọc"
+                    className="w-full h-full object-cover"
+                    title="Đã đọc"
+                  />
+                </div>
+              ) : msg.isUnreadByUser ? (
+                <div className="w-2.5 h-2.5 bg-blue-500 rounded-full ml-2 flex-shrink-0" />
+              ) : null}
             </button>
           ))}
           {messages.length === 0 && (
