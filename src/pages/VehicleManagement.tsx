@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Plus, Car, Edit, Trash2 } from "lucide-react";
 import { Vehicle } from "@/interfaces/Vehicle"; // <<< Import interface Vehicle
+import { Modal, Button } from "zmp-ui";
 
 // --- Helper functions for localStorage ---
 const getVehiclesFromStorage = (): Vehicle[] => {
@@ -27,6 +28,9 @@ const saveVehiclesToStorage = (vehicles: Vehicle[]) => {
 const VehicleManagement = () => {
   const navigate = useNavigate();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  // <<< THÊM STATE CHO MODAL XÁC NHẬN XÓA >>>
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [vehicleToDelete, setVehicleToDelete] = useState<string | null>(null);
 
   // Load vehicles from storage on mount
   useEffect(() => {
@@ -44,14 +48,28 @@ const VehicleManagement = () => {
   const handleEditVehicle = (vehicleId: string) => {
     navigate(`/edit-vehicle/${vehicleId}`); // Điều hướng đến trang sửa xe với ID
   };
-
-  const handleDeleteVehicle = (vehicleId: string) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa xe này?")) {
-      const updatedVehicles = vehicles.filter((v) => v.id !== vehicleId);
+  // <<< MỞ MODAL KHI NHẤN NÚT XÓA >>>
+  const requestDeleteVehicle = (vehicleId: string) => {
+    setVehicleToDelete(vehicleId);
+    setShowDeleteConfirm(true);
+  };
+  // <<< HÀM XÓA THỰC SỰ KHI XÁC NHẬN TRÊN MODAL >>>
+  const confirmDeleteVehicle = () => {
+    if (vehicleToDelete) {
+      const updatedVehicles = vehicles.filter((v) => v.id !== vehicleToDelete);
       setVehicles(updatedVehicles);
       saveVehiclesToStorage(updatedVehicles);
-      console.log("Deleted vehicle with ID:", vehicleId);
+      console.log("Deleted vehicle with ID:", vehicleToDelete);
     }
+    // Đóng modal và reset state
+    setShowDeleteConfirm(false);
+    setVehicleToDelete(null);
+  };
+
+  // <<< HỦY XÓA KHI NHẤN HỦY TRÊN MODAL >>>
+  const cancelDeleteVehicle = () => {
+    setShowDeleteConfirm(false);
+    setVehicleToDelete(null);
   };
 
   return (
@@ -96,7 +114,7 @@ const VehicleManagement = () => {
                   <Edit size={18} />
                 </button>
                 <button
-                  onClick={() => handleDeleteVehicle(vehicle.id)}
+                  onClick={() => requestDeleteVehicle(vehicle.id)}
                   className="p-2 text-red-500 hover:bg-red-50 rounded-full"
                   aria-label="Xóa xe"
                 >
@@ -124,6 +142,31 @@ const VehicleManagement = () => {
           Thêm xe mới
         </button>
       </div>
+      {/* <<< MODAL XÁC NHẬN XÓA >>> */}
+      <Modal
+        visible={showDeleteConfirm}
+        title="Xác nhận xóa"
+        onClose={cancelDeleteVehicle} // Đóng modal khi nhấn ra ngoài hoặc nút X
+        zIndex={1200}
+        actions={[
+          {
+            text: "Hủy",
+            onClick: cancelDeleteVehicle,
+            highLight: false, // Nút thường
+          },
+          {
+            text: "Xóa",
+            onClick: confirmDeleteVehicle,
+            highLight: true, // Nút nổi bật (thường là màu đỏ hoặc màu chính)
+            danger: true, // Đánh dấu là hành động nguy hiểm (có thể đổi màu nút)
+          },
+        ]}
+      >
+        <div className="p-4 text-center">
+          Bạn có chắc chắn muốn xóa xe này không? Hành động này không thể hoàn
+          tác.
+        </div>
+      </Modal>
     </div>
   );
 };

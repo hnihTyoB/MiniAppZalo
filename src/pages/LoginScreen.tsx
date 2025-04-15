@@ -108,7 +108,7 @@ const LoginScreen = () => {
         {/* Cập nhật nút Đăng nhập */}
         <button
           onClick={handleLogin} // Gắn hàm xử lý đăng nhập vào sự kiện onClick
-          className="bg-orange-400 hover:bg-orange-500 text-white py-2 w-full rounded"
+          className="bg-orange-400 hover:bg-orange-500 text-white py-3 w-full rounded"
         >
           Đăng nhập
         </button>

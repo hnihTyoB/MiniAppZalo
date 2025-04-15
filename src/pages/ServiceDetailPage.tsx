@@ -10,6 +10,10 @@ import {
   Square,
   Droplet,
   ShowerHead,
+  Settings, // <<< THÊM ICON
+  Search, // <<< THÊM ICON
+  Paintbrush, // <<< THÊM ICON
+  SprayCan, // <<< THÊM ICON
 } from "lucide-react"; // Thêm các icon dịch vụ để map
 
 // --- Interface cho chi tiết dịch vụ ---
@@ -63,6 +67,42 @@ const allServiceDetails: ServiceDetail[] = [
     priceRange: "Từ 50.000đ",
     imageUrl: "/images/service-ruaxe.jpg", // <<< Cần có ảnh mẫu
   },
+  {
+    id: "bao-duong", // ID này cần khớp với kết quả từ normalizeServiceName ở Home.tsx
+    name: "Bảo dưỡng",
+    icon: Settings,
+    description:
+      "Dịch vụ bảo dưỡng định kỳ theo khuyến cáo của nhà sản xuất, giúp xe vận hành ổn định và kéo dài tuổi thọ.",
+    priceRange: "Từ 500.000đ",
+    imageUrl: "/images/service-baoduong.jpg", // <<< Cần có ảnh mẫu
+  },
+  {
+    id: "kiem-tra-tong-quat", // ID này cần khớp
+    name: "Kiểm tra tổng quát",
+    icon: Search,
+    description:
+      "Kiểm tra toàn diện tình trạng xe trước các chuyến đi dài hoặc theo định kỳ, phát hiện sớm các vấn đề tiềm ẩn.",
+    priceRange: "Từ 200.000đ",
+    imageUrl: "/images/service-kiemtra.jpg", // <<< Cần có ảnh mẫu
+  },
+  {
+    id: "son-xe", // ID này cần khớp
+    name: "Sơn xe",
+    icon: Paintbrush,
+    description:
+      "Xử lý các vết móp, trầy xước trên thân vỏ, phục hồi và sơn lại bề mặt xe, trả lại vẻ đẹp nguyên bản.",
+    priceRange: "Liên hệ báo giá",
+    imageUrl: "/images/service-dongson.jpg", // <<< Cần có ảnh mẫu
+  },
+  {
+    id: "ve-sinh-noi-that", // ID này cần khớp
+    name: "Vệ sinh nội thất",
+    icon: SprayCan,
+    description:
+      "Làm sạch chi tiết nội thất xe: ghế, thảm, taplo, cửa gió điều hòa,... khử mùi và tạo không gian sạch sẽ, thoáng đãng.",
+    priceRange: "Từ 400.000đ",
+    imageUrl: "/images/service-vesinh.jpg", // <<< Cần có ảnh mẫu
+  },
 ];
 
 // --- Helper function để tìm icon dựa trên id/name ---
@@ -77,6 +117,14 @@ const getIconById = (id: string): React.ElementType => {
       return Droplet;
     case "rua-xe":
       return ShowerHead;
+    case "bao-duong":
+      return Settings;
+    case "kiem-tra-tong-quat":
+      return Search;
+    case "son-xe":
+      return Paintbrush;
+    case "ve-sinh-noi-that":
+      return SprayCan;
     default:
       return Wrench; // Icon mặc định
   }
@@ -88,22 +136,17 @@ const ServiceDetailPage = () => {
   const [serviceDetail, setServiceDetail] = useState<ServiceDetail | null>(
     null
   );
-
-  const serviceId = params.serviceId; // Lấy serviceId từ URL (ví dụ: 'sua-xe')
+  const serviceId = params.serviceId;
 
   useEffect(() => {
     console.log("Fetching service detail for ID:", serviceId);
-    // --- Mô phỏng lấy dữ liệu dịch vụ ---
-    // TODO: Thay bằng logic fetch API thực tế
     if (serviceId) {
       const foundService = allServiceDetails.find((s) => s.id === serviceId);
       if (foundService) {
-        // Gán icon nếu chưa có trong dữ liệu tìm thấy (ví dụ)
+        // Gán icon nếu chưa có (hoặc để đảm bảo đúng icon)
         setServiceDetail({ ...foundService, icon: getIconById(serviceId) });
       } else {
-        // Xử lý trường hợp không tìm thấy dịch vụ
         console.error("Service not found for ID:", serviceId);
-        // Có thể điều hướng về trang lỗi hoặc trang trước đó
         // navigate('/not-found');
       }
     }

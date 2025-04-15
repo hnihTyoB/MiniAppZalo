@@ -33,7 +33,7 @@ const Profile = () => {
 
   // <<< THÊM MỤC QUẢN LÝ XE VÀO MENU >>>
   const menuItems = [
-    { icon: Clock, text: "Lịch sử", route: "/history" },
+    { icon: Clock, text: "Lịch sử", route: "/booking-history" },
     { icon: User, text: "Thông tin tài khoản", route: "/account" },
     { icon: Car, text: "Quản lý phương tiện", route: "/vehicles" }, // <<< MỤC MỚI
     { icon: Info, text: "Phiên bản", route: "/version" },

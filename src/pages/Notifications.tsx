@@ -1,129 +1,323 @@
 // src/pages/Notifications.tsx
-import React, { useState, useEffect } from "react"; // <<< THÊM useEffect
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
-import { Filter, Image as ImageIcon, ChevronLeft } from "lucide-react";
+import {
+  Filter,
+  Image as ImageIcon,
+  ChevronLeft,
+  Clock,
+  Gift,
+  Info,
+} from "lucide-react";
 
-// --- interface ScheduleItem ---
-interface ScheduleItem {
+// --- Interfaces ---
+
+// Định nghĩa các loại thông báo
+type NotificationType = "appointment" | "promotion" | "system" | "other";
+
+// Interface cơ sở cho mọi thông báo
+interface BaseNotification {
+  id: string; // ID duy nhất của thông báo
+  type: NotificationType; // Loại thông báo
+  timestamp: number; // Thời gian tạo (Unix timestamp)
+  isRead: boolean; // Trạng thái đã đọc
+  title?: string; // Tiêu đề (tùy chọn)
+  message?: string; // Nội dung (tùy chọn)
+  imageUrl?: string; // Ảnh chung (tùy chọn)
+}
+
+// Interface chi tiết cho một lịch hẹn
+interface AppointmentDetails {
+  branch: string;
+  services: string[]; // Mảng các dịch vụ
+  date: string; // Định dạng "DD / MM / YYYY"
+  time: string; // Định dạng "HH:MM AM/PM"
+  status: "upcoming" | "done"; // Trạng thái lịch hẹn
+}
+
+// Interface cho thông báo loại lịch hẹn
+interface AppointmentNotification extends BaseNotification {
+  type: "appointment";
+  details: AppointmentDetails; // Chứa thông tin chi tiết lịch hẹn
+}
+
+// Interface cho thông báo loại khuyến mãi
+interface PromotionNotification extends BaseNotification {
+  type: "promotion";
+  discountCode?: string; // Mã giảm giá (tùy chọn)
+  link?: string; // Đường dẫn chi tiết (tùy chọn)
+}
+
+// Interface cho thông báo loại hệ thống
+interface SystemNotification extends BaseNotification {
+  type: "system";
+}
+
+// Kiểu Union cho tất cả các loại thông báo có thể có
+type NotificationItem =
+  | AppointmentNotification
+  | PromotionNotification
+  | SystemNotification; // Có thể thêm các loại khác
+
+// Interface mô tả cấu trúc dữ liệu đọc từ localStorage ("newlyAddedBookings")
+// Nó tương tự ScheduleItem trong Bookings.tsx
+interface BookingDataFromStorage {
   id: string;
   branch: string;
-  service: string;
+  services: string[];
   date: string;
   time: string;
-  reminder: boolean;
   status: "upcoming" | "done";
   imageUrl?: string;
+  address?: string;
+  vehicleId?: string;
+  // ... các trường khác nếu có trong localStorage ...
 }
 
 // --- Dữ liệu mẫu ban đầu ---
-const initialMockData: ScheduleItem[] = [
+const initialMockData: NotificationItem[] = [
+  // Lịch hẹn sắp tới
   {
     id: "#549493",
-    branch: "PTIT – Chi nhánh 1",
-    service: "Thay lốp",
-    date: "20 / 03 / 2025",
-    time: "10:00 AM",
-    reminder: false,
-    status: "upcoming",
+    type: "appointment",
+    timestamp: Date.now() - 86400000 * 2, // 2 ngày trước
+    isRead: false,
+    details: {
+      branch: "PTIT – Chi nhánh 1",
+      services: ["Thay lốp"],
+      date: "01 / 05 / 2025", // Ngày gần để test countdown
+      time: "10:00 AM",
+      status: "upcoming",
+    },
+    imageUrl: "/images/branch-1.jpg",
   },
+  // Lịch hẹn sắp tới khác
   {
     id: "#64944",
-    branch: "PTIT – Chi nhánh 2",
-    service: "Rửa xe",
-    date: "22 / 03 / 2025",
-    time: "07:00 AM",
-    reminder: true,
-    status: "upcoming",
+    type: "appointment",
+    timestamp: Date.now() - 86400000 * 1, // 1 ngày trước
+    isRead: true,
+    details: {
+      branch: "PTIT – Chi nhánh 2",
+      services: ["Rửa xe", "Thay dầu"], // Ví dụ nhiều dịch vụ
+      date: "25 / 07 / 2024", // Ngày gần
+      time: "07:00 AM",
+      status: "upcoming",
+    },
+    imageUrl: "/images/branch-2.jpg",
   },
+  // Lịch hẹn đã hoàn thành
   {
     id: "#789101",
-    branch: "PTIT – Chi nhánh 3",
-    service: "Thay nhớt",
-    date: "12 / 03 / 2024",
-    time: "11:00 AM",
-    reminder: false,
-    status: "done",
+    type: "appointment",
+    timestamp: Date.now() - 86400000 * 10, // 10 ngày trước
+    isRead: true,
+    details: {
+      branch: "PTIT – Chi nhánh 3",
+      services: ["Thay nhớt"],
+      date: "12 / 07 / 2024", // Ngày trong quá khứ
+      time: "11:00 AM",
+      status: "done",
+    },
   },
+  // Thông báo khuyến mãi
   {
-    id: "#889102",
-    branch: "PTIT – Chi nhánh 1",
-    service: "Bảo dưỡng định kỳ",
-    date: "15 / 04 / 2024",
-    time: "09:00 AM",
-    reminder: true,
-    status: "upcoming",
+    id: "promo-001",
+    type: "promotion",
+    timestamp: Date.now() - 3600000 * 5, // 5 giờ trước
+    isRead: false,
+    title: "Ưu đãi cuối tuần!",
+    message: "Giảm 15% dịch vụ rửa xe vào Thứ 7 & Chủ Nhật.",
+    imageUrl: "/images/promotion-ruaxe.jpg",
+    link: "/promotions/rua-xe-cuoi-tuan",
   },
+  // Thông báo hệ thống
   {
-    id: "#989103",
-    branch: "PTIT – Chi nhánh 4",
-    service: "Kiểm tra tổng quát",
-    date: "01 / 02 / 2024",
-    time: "02:00 PM",
-    reminder: false,
-    status: "done",
+    id: "sys-001",
+    type: "system",
+    timestamp: Date.now() - 3600000 * 24, // 1 ngày trước
+    isRead: true,
+    title: "Cập nhật ứng dụng",
+    message: "Phiên bản mới đã sẵn sàng với nhiều cải tiến. Cập nhật ngay!",
   },
 ];
 
+// --- Component Countdown ---
+const AppointmentCountdown: React.FC<{ date: string; time: string }> = ({
+  date,
+  time,
+}) => {
+  // Hàm tính toán thời gian còn lại
+  const calculateRemainingTime = () => {
+    try {
+      const dateParts = date.split(" / ");
+      if (dateParts.length !== 3) return null;
+      const isoDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+
+      const timeParts = time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!timeParts) return null;
+      let hours = parseInt(timeParts[1], 10);
+      const minutes = parseInt(timeParts[2], 10);
+      const ampm = timeParts[3].toUpperCase();
+
+      if (ampm === "PM" && hours < 12) hours += 12;
+      if (ampm === "AM" && hours === 12) hours = 0;
+
+      const targetDateTime = new Date(
+        `${isoDate}T${String(hours).padStart(2, "0")}:${String(
+          minutes
+        ).padStart(2, "0")}:00`
+      );
+
+      if (isNaN(targetDateTime.getTime())) return null;
+
+      const now = Date.now();
+      const diff = targetDateTime.getTime() - now;
+
+      if (diff <= 0) return "Đã qua";
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hoursLeft = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutesLeft = Math.floor((diff / 1000 / 60) % 60);
+
+      if (days > 0) return `Còn ${days} ngày ${hoursLeft} giờ`;
+      if (hoursLeft > 0) return `Còn ${hoursLeft} giờ ${minutesLeft} phút`;
+      if (minutesLeft > 0) return `Còn ${minutesLeft} phút`;
+      return "Sắp đến";
+    } catch (error) {
+      console.error("Lỗi tính toán thời gian:", error);
+      return "Lỗi";
+    }
+  };
+
+  const [remaining, setRemaining] = useState(calculateRemainingTime());
+
+  // Cập nhật countdown mỗi phút
+  useEffect(() => {
+    const timerId = setInterval(() => {
+      setRemaining(calculateRemainingTime());
+    }, 60000);
+    return () => clearInterval(timerId);
+  }, [date, time]);
+
+  if (remaining === null) {
+    return <span className="text-xs text-red-500">Lỗi định dạng ngày/giờ</span>;
+  }
+
+  return (
+    <span className="text-xs text-orange-600 font-medium flex items-center gap-1">
+      <Clock size={12} /> {remaining}
+    </span>
+  );
+};
+
+// --- Component Notifications ---
 export default function Notifications() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  // <<< SỬA: Khởi tạo state với dữ liệu mẫu ban đầu >>>
-  const [items, setItems] = useState<ScheduleItem[]>(initialMockData);
+  const [items, setItems] = useState<NotificationItem[]>(initialMockData);
 
-  // <<< THÊM: useEffect để đọc và thêm lịch hẹn mới từ localStorage >>>
+  // Load lịch hẹn mới từ localStorage khi component mount
   useEffect(() => {
     try {
       const newlyAddedBookingsRaw = localStorage.getItem("newlyAddedBookings");
       if (newlyAddedBookingsRaw) {
-        const newlyAddedBookings: ScheduleItem[] = JSON.parse(
+        const newlyAddedBookings: BookingDataFromStorage[] = JSON.parse(
           newlyAddedBookingsRaw
         );
+
         if (newlyAddedBookings.length > 0) {
-          // Thêm lịch hẹn mới vào đầu danh sách hiện tại
-          setItems((prevItems) => [...newlyAddedBookings, ...prevItems]);
-          // Xóa dữ liệu đã đọc khỏi localStorage
+          const newNotifications: AppointmentNotification[] =
+            newlyAddedBookings.map((booking) => {
+              const {
+                id,
+                imageUrl,
+                branch,
+                services,
+                date,
+                time,
+                status,
+                // Bỏ qua các trường không cần thiết cho details
+                ...rest
+              } = booking;
+
+              const details: AppointmentDetails = {
+                branch,
+                services,
+                date,
+                time,
+                status,
+              };
+
+              return {
+                id,
+                type: "appointment",
+                timestamp: Date.now(),
+                isRead: false,
+                details,
+                imageUrl,
+              };
+            });
+
+          // Thêm thông báo mới vào đầu danh sách
+          setItems((prevItems) => [...newNotifications, ...prevItems]);
           localStorage.removeItem("newlyAddedBookings");
         }
       }
+      // TODO: Load các loại thông báo khác từ API hoặc nguồn khác
     } catch (error) {
       console.error("Lỗi khi đọc lịch hẹn từ localStorage:", error);
-      // Xóa nếu dữ liệu bị lỗi
-      localStorage.removeItem("newlyAddedBookings");
+      localStorage.removeItem("newlyAddedBookings"); // Xóa nếu lỗi
     }
-  }, []); // Chỉ chạy một lần khi component mount
+  }, []); // Chỉ chạy 1 lần
 
-  // --- Các hàm xử lý khác (giữ nguyên) ---
-  const goBack = () => {
-    navigate(-1);
-  };
-  const handleClearDone = () => {
-    setItems((prev) => prev.filter((item) => item.status !== "done"));
-  };
-  const handleCancelAppointment = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
-    console.log(`Hủy lịch hẹn có ID: ${id}`);
-  };
-  const handleReminderChange = (id: string, checked: boolean) => {
+  // --- Handlers ---
+  const goBack = () => navigate(-1);
+
+  // Xóa các lịch hẹn đã hoàn thành
+  const handleClearDoneAppointments = () => {
     setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, reminder: checked } : item
+      prev.filter(
+        (item) =>
+          !(item.type === "appointment" && item.details.status === "done")
       )
     );
-    console.log(`Thay đổi nhắc nhở cho ID ${id} thành ${checked}`);
+    // TODO: Có thể cần cập nhật trạng thái này lên server hoặc localStorage khác
   };
 
-  // --- Logic lọc (giữ nguyên) ---
-  const filteredItems = items.filter(
-    (item) =>
-      item.branch.toLowerCase().includes(search.toLowerCase()) ||
-      item.service.toLowerCase().includes(search.toLowerCase()) ||
-      item.id.toLowerCase().includes(search.toLowerCase())
+  // --- Logic lọc thông báo ---
+  const filteredItems = useMemo(
+    () =>
+      items.filter((item) => {
+        const searchTerm = search.toLowerCase();
+        if (!searchTerm) return true;
+
+        // Tìm kiếm chung
+        if (item.title?.toLowerCase().includes(searchTerm)) return true;
+        if (item.message?.toLowerCase().includes(searchTerm)) return true;
+
+        // Tìm kiếm riêng cho lịch hẹn
+        if (item.type === "appointment") {
+          const details = item.details;
+          const servicesString = Array.isArray(details.services)
+            ? details.services.join(", ").toLowerCase()
+            : "";
+          if (details.branch.toLowerCase().includes(searchTerm)) return true;
+          if (servicesString.includes(searchTerm)) return true;
+          if (item.id.toLowerCase().includes(searchTerm)) return true;
+        }
+
+        // TODO: Thêm logic tìm kiếm cho các loại khác nếu cần
+
+        return false;
+      }),
+    [items, search]
   );
 
+  // --- Render ---
   return (
     <div className="h-full overflow-y-auto bg-white pb-20 max-w-md mx-auto relative">
       {/* Header */}
@@ -134,13 +328,13 @@ export default function Notifications() {
         >
           <ChevronLeft size={25} />
         </button>
-        <h1 className="text-xl font-semibold text-gray-800">Notifications</h1>
+        <h1 className="text-xl font-semibold text-gray-800">Thông báo</h1>
       </div>
 
       {/* Thanh tìm kiếm */}
       <div className="sticky top-16 flex gap-2 items-center bg-white z-10 px-4 py-2 border-b">
         <Input
-          placeholder="Tìm kiếm lịch hẹn..."
+          placeholder="Tìm kiếm thông báo..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="flex-1"
@@ -155,79 +349,201 @@ export default function Notifications() {
 
       {/* Nội dung cuộn */}
       <div className="p-4 space-y-4">
-        {/* Danh sách lịch hẹn */}
+        {/* Danh sách thông báo */}
         {filteredItems.length > 0 ? (
-          filteredItems.map((item) => (
-            <Card key={item.id} className="overflow-hidden shadow-sm">
-              <CardContent className="p-4 space-y-3">
-                {/* Hàng 1 */}
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-500">{`${item.date} – ${item.time}`}</div>
-                  <div className="flex items-center">
-                    <span className="text-sm text-gray-500 mr-2">Nhắc tôi</span>
-                    <Switch
-                      checked={item.reminder}
-                      onCheckedChange={(checked) =>
-                        handleReminderChange(item.id, checked)
-                      }
-                      disabled={item.status === "done"}
-                      className="data-[state=checked]:bg-orange-400"
-                    />
-                  </div>
-                </div>
-                {/* Hàng 2 */}
-                <div className="flex items-start gap-3 pt-1">
-                  <div className="w-20 h-20 bg-gray-100 flex items-center justify-center flex-shrink-0 rounded overflow-hidden">
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt={item.service}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <ImageIcon className="w-8 h-8 text-gray-400" />
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-1 min-w-0">
-                    <div className="font-medium truncate">{item.branch}</div>
-                    <div className="text-xs text-gray-500">ID: {item.id}</div>
-                    <div className="text-sm font-semibold">{item.service}</div>
-                  </div>
-                </div>
-                {/* Đường kẻ */}
-                <hr className="my-2 border-gray-200" />
-                {/* Hàng 3 */}
-                <div className="flex justify-center items-center pt-1">
-                  {item.status === "done" ? (
-                    <span className="text-sm text-green-600 font-medium">
-                      Hoàn thành
-                    </span>
-                  ) : (
-                    <Button
-                      variant="link"
-                      className="p-0 h-auto text-red-500 text-sm font-medium hover:text-red-600"
-                      onClick={() => handleCancelAppointment(item.id)}
-                    >
-                      Hủy lịch hẹn
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))
+          filteredItems.map((item) => {
+            // --- Render cho Lịch hẹn ---
+            if (item.type === "appointment") {
+              const details = item.details;
+              return (
+                <Card
+                  key={item.id}
+                  className={`overflow-hidden shadow-sm ${
+                    !item.isRead ? "bg-blue-50/30" : ""
+                  }`}
+                >
+                  <CardContent className="p-4 space-y-3">
+                    {/* Thời gian & Trạng thái đọc */}
+                    <div className="flex justify-between items-center">
+                      <div className="text-xs text-gray-400">
+                        {new Date(item.timestamp).toLocaleTimeString("vi-VN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}{" "}
+                        - {new Date(item.timestamp).toLocaleDateString("vi-VN")}
+                      </div>
+                      {!item.isRead && (
+                        <div
+                          className="w-2 h-2 bg-blue-500 rounded-full"
+                          title="Chưa đọc"
+                        ></div>
+                      )}
+                    </div>
+                    {/* Ảnh & Thông tin */}
+                    <div className="flex items-start gap-3 pt-1">
+                      <div className="w-20 h-20 bg-gray-100 flex items-center justify-center flex-shrink-0 rounded overflow-hidden">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={details.branch}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <ImageIcon className="w-8 h-8 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <div className="font-medium truncate">
+                          {details.branch}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          ID: {item.id}
+                        </div>
+                        <div className="text-sm font-semibold">
+                          {Array.isArray(details.services)
+                            ? details.services.join(", ")
+                            : "N/A"}
+                        </div>
+                        <div className="text-sm text-gray-500">{`${details.date} – ${details.time}`}</div>
+                      </div>
+                    </div>
+                    {/* Đường kẻ */}
+                    <hr className="my-2 border-gray-200" />
+                    {/* Trạng thái / Countdown */}
+                    <div className="flex justify-center items-center pt-1">
+                      {details.status === "done" ? (
+                        <span className="text-sm text-green-600 font-medium">
+                          Hoàn thành
+                        </span>
+                      ) : (
+                        <AppointmentCountdown
+                          date={details.date}
+                          time={details.time}
+                        />
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            }
+            // --- Render cho Khuyến mãi ---
+            else if (item.type === "promotion") {
+              return (
+                <Card
+                  key={item.id}
+                  className={`overflow-hidden shadow-sm ${
+                    !item.isRead ? "bg-orange-50/30" : ""
+                  }`}
+                >
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="text-xs text-gray-400">
+                        {new Date(item.timestamp).toLocaleTimeString("vi-VN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}{" "}
+                        - {new Date(item.timestamp).toLocaleDateString("vi-VN")}
+                      </div>
+                      {!item.isRead && (
+                        <div
+                          className="w-2 h-2 bg-blue-500 rounded-full"
+                          title="Chưa đọc"
+                        ></div>
+                      )}
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-12 h-12 bg-orange-100 flex items-center justify-center flex-shrink-0 rounded-full">
+                        <Gift className="w-6 h-6 text-orange-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">
+                          {item.title || "Khuyến mãi"}
+                        </div>
+                        {item.message && (
+                          <p className="text-xs text-gray-600 mt-0.5">
+                            {item.message}
+                          </p>
+                        )}
+                        {item.link && (
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-orange-500 hover:underline mt-1 inline-block"
+                          >
+                            Xem chi tiết
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            }
+            // --- Render cho Thông báo hệ thống ---
+            else if (item.type === "system") {
+              return (
+                <Card
+                  key={item.id}
+                  className={`overflow-hidden shadow-sm ${
+                    !item.isRead
+                      ? "bg-blue-50/30"
+                      : "bg-blue-50/50 border-blue-200/50"
+                  }`}
+                >
+                  <CardContent className="p-4 space-y-2">
+                    <div className="flex justify-between items-center mb-1">
+                      <div className="text-xs text-gray-500">
+                        {new Date(item.timestamp).toLocaleTimeString("vi-VN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}{" "}
+                        - {new Date(item.timestamp).toLocaleDateString("vi-VN")}
+                      </div>
+                      {!item.isRead && (
+                        <div
+                          className="w-2 h-2 bg-blue-500 rounded-full"
+                          title="Chưa đọc"
+                        ></div>
+                      )}
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-blue-100 flex items-center justify-center flex-shrink-0 rounded-full">
+                        <Info className="w-5 h-5 text-blue-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm truncate">
+                          {item.title || "Thông báo hệ thống"}
+                        </div>
+                        {item.message && (
+                          <p className="text-xs text-gray-700 mt-0.5">
+                            {item.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            }
+            // --- Render mặc định ---
+          })
         ) : (
           <p className="text-center text-gray-500 mt-10">
-            Không tìm thấy lịch hẹn nào.
+            Không có thông báo nào.
           </p>
         )}
 
         {/* Nút Dọn dẹp */}
-        {items.some((item) => item.status === "done") && (
+        {items.some(
+          (item) =>
+            item.type === "appointment" && item.details.status === "done"
+        ) && (
           <Button
             className="w-full bg-orange-400 hover:bg-orange-500 text-white rounded-xl mt-4 py-2.5"
-            onClick={handleClearDone}
+            onClick={handleClearDoneAppointments}
           >
-            Dọn dẹp
+            Dọn dẹp lịch hẹn đã xong
           </Button>
         )}
       </div>

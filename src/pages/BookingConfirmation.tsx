@@ -209,7 +209,7 @@ const BookingConfirmation = () => {
       {/* --- Các nút hành động --- */}
       <div className="w-full max-w-md space-y-3">
         <button
-          onClick={() => navigate("/notifications")}
+          onClick={() => navigate("/schedule")}
           className="w-full bg-orange-400 hover:bg-orange-500 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
         >
           <ListChecks size={18} /> Xem lịch hẹn của tôi

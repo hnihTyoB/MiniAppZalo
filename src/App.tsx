@@ -14,10 +14,12 @@ import BranchListPage from "./pages/BranchListPage";
 import BranchDetail from "./pages/BranchDetail";
 import Notifications from "./pages/Notifications";
 import Booking from "./pages/Bookings";
+import Schedule from "./pages/Schedule";
 import BookingConfirmation from "./pages/BookingConfirmation"; // Đường dẫn đến component BookingConfirmation
 import Chat from "./pages/Chat";
 import Conversation from "./pages/Conversation";
 import Profile from "./pages/Profile";
+import BookingHistory from "./pages/BookingHistory"; // Đường dẫn đến component BookingHistory
 import VehicleManagement from "./pages/VehicleManagement"; // <<< Import trang quản lý xe
 import AddEditVehicle from "./pages/AddEditVehicle";
 import AccountInfo from "./pages/AccountInfo";
@@ -39,6 +41,7 @@ const MainApp = () => {
           <Route path="/branch-detail" element={<BranchDetail />} />{" "}
           <Route path="/notifications" element={<Notifications />} />
           <Route path="/bookings" element={<Booking />} />{" "}
+          <Route path="/schedule" element={<Schedule />} />{" "}
           <Route
             path="/booking-confirmation"
             element={<BookingConfirmation />}
@@ -46,6 +49,7 @@ const MainApp = () => {
           <Route path="/chat" element={<Chat />} />
           <Route path="/conversation/:branchId" element={<Conversation />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/booking-history" element={<BookingHistory />} />{" "}
           <Route path="/vehicles" element={<VehicleManagement />} />{" "}
           <Route path="/add-vehicle" element={<AddEditVehicle />} />{" "}
           <Route path="/edit-vehicle/:vehicleId" element={<AddEditVehicle />} />{" "}

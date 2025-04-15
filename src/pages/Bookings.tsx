@@ -5,7 +5,8 @@ import "react-calendar/dist/Calendar.css";
 import clsx from "clsx";
 import {
   Home as HomeIcon,
-  CalendarDays,
+  CalendarDays as CalendarIcon, // <<< Đổi tên import để tránh trùng lặp
+  ListChecks, // <<< THÊM ICON CHO NÚT LỊCH HẸN
   MessageCircle,
   User,
   Wrench,
@@ -66,7 +67,7 @@ interface ScheduleItem {
 // --- Constants ---
 const navItems: NavItem[] = [
   { icon: HomeIcon, label: "Home", path: "/home" },
-  { icon: CalendarDays, label: "Bookings", path: "/bookings" },
+  { icon: CalendarIcon, label: "Bookings", path: "/bookings" },
   { icon: MessageCircle, label: "Chat", path: "/chat" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
@@ -77,7 +78,7 @@ const allServices: Service[] = [
   { name: "Rửa xe", icon: ShowerHead },
   { name: "Bảo dưỡng", icon: Settings }, // Ví dụ thêm
   { name: "Kiểm tra tổng quát", icon: Search }, // Ví dụ thêm
-  { name: "Làm đồng sơn", icon: Paintbrush }, // Ví dụ thêm (cần import icon Paintbrush từ lucide-react)
+  { name: "Sơn xe", icon: Paintbrush }, // Ví dụ thêm (cần import icon Paintbrush từ lucide-react)
   { name: "Vệ sinh nội thất", icon: SprayCan }, // Ví dụ thêm (cần import icon CarSeat từ lucide-react)
   // Thêm các dịch vụ khác nếu cần
 ];
@@ -338,9 +339,21 @@ const Booking = () => {
   return (
     <div className="flex flex-col h-screen bg-white pb-36">
       {/* Header */}
+      {/* <<< THÊM NÚT ICON VÀO HEADER >>> */}
       <div className="sticky top-0 flex items-center justify-center p-4 border-b bg-white z-10">
-        <h2 className="text-xl font-semibold text-center">Đặt lịch</h2>
+        {/* Nút quay lại (nếu có) */}
+        {/* <button onClick={() => navigate(-1)} className="absolute left-4 ..."><ChevronLeft /></button> */}
+        <h2 className="text-xl font-semibold text-center flex-1">Đặt lịch</h2>
+        {/* Nút chuyển đến trang Schedule */}
+        <button
+          onClick={() => navigate("/schedule")}
+          className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-orange-500 hover:bg-orange-50 rounded-full"
+          aria-label="Xem lịch hẹn"
+        >
+          <ListChecks size={22} />
+        </button>
       </div>
+      {/* <<< KẾT THÚC THÊM NÚT >>> */}
 
       {/* Nội dung chính */}
       <div className="flex-grow overflow-y-auto p-4 space-y-6">

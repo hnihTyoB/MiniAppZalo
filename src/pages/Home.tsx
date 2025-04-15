@@ -50,7 +50,7 @@ const services: ServiceItem[] = [
   { icon: ShowerHead, label: "Rửa xe" },
   { icon: Settings, label: "Bảo dưỡng" },
   { icon: Search, label: "Kiểm tra tổng quát" },
-  { icon: Paintbrush, label: "Làm đồng sơn" },
+  { icon: Paintbrush, label: "Sơn xe" },
   { icon: SprayCan, label: "Vệ sinh nội thất" },
 ];
 const navItems: NavItem[] = [
