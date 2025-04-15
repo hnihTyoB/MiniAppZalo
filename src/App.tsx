@@ -18,6 +18,8 @@ import BookingConfirmation from "./pages/BookingConfirmation"; // Đường dẫ
 import Chat from "./pages/Chat";
 import Conversation from "./pages/Conversation";
 import Profile from "./pages/Profile";
+import VehicleManagement from "./pages/VehicleManagement"; // <<< Import trang quản lý xe
+import AddEditVehicle from "./pages/AddEditVehicle";
 import AccountInfo from "./pages/AccountInfo";
 import EditProfile from "./pages/EditProfile";
 
@@ -44,6 +46,9 @@ const MainApp = () => {
           <Route path="/chat" element={<Chat />} />
           <Route path="/conversation/:branchId" element={<Conversation />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/vehicles" element={<VehicleManagement />} />{" "}
+          <Route path="/add-vehicle" element={<AddEditVehicle />} />{" "}
+          <Route path="/edit-vehicle/:vehicleId" element={<AddEditVehicle />} />{" "}
           <Route path="/account" element={<AccountInfo />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           {/* Thêm các route khác nếu cần */}

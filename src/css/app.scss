@@ -35,11 +35,14 @@ body,
     color: #f97316 !important; // Màu orange-500 (cam chính)
   }
 }
-.zaui-input-affix-wrapper.zaui-select {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease; // Thêm transition cho mượt
+// Kết hợp cả hai trường hợp bằng dấu phẩy
+.zaui-input-affix-wrapper.zaui-select,
+.zaui-input-affix-wrapper.zaui-input-affix-wrapper-readonly // Nhắm mục tiêu cả trường hợp ở Booking
+{
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   &:hover {
     border-color: #f97316 !important;
-    border-width: 2px !important;
+    border-width: 1px !important;
     box-shadow: none !important;
   }
   &:focus-within {

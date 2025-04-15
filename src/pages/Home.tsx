@@ -19,6 +19,9 @@ import {
   CalendarDays,
   MessageCircle,
   User,
+  Settings, // <<< THÊM ICON NÀY
+  Paintbrush, // <<< THÊM ICON NÀY
+  SprayCan, // <<< THÊM ICON NÀY
   // Building, // <<< Không cần nữa nếu hiển thị list
 } from "lucide-react";
 
@@ -45,6 +48,10 @@ const services: ServiceItem[] = [
   { icon: Square, label: "Thay kính" },
   { icon: Droplet, label: "Thay dầu" },
   { icon: ShowerHead, label: "Rửa xe" },
+  { icon: Settings, label: "Bảo dưỡng" },
+  { icon: Search, label: "Kiểm tra tổng quát" },
+  { icon: Paintbrush, label: "Làm đồng sơn" },
+  { icon: SprayCan, label: "Vệ sinh nội thất" },
 ];
 const navItems: NavItem[] = [
   { icon: HomeIcon, label: "Home", path: "/home" },
@@ -83,6 +90,7 @@ const normalizeServiceName = (name: string): string => {
 const Home = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
+  const [showAllHomeServices, setShowAllHomeServices] = useState(false);
   // <<< XÓA: State selectedBranch không cần thiết cho kiểu hiển thị này >>>
   // const [selectedBranch, setSelectedBranch] = useState<Branch | null>(
   //   availableBranches[0] || null
@@ -98,6 +106,10 @@ const Home = () => {
     } else if (section === "Dịch vụ") {
       // navigate('/services'); // Ví dụ điều hướng khác
     }
+  };
+  // <<< THÊM HANDLER MỚI ĐỂ TOGGLE DỊCH VỤ >>>
+  const handleToggleServices = () => {
+    setShowAllHomeServices(!showAllHomeServices);
   };
   const handleServiceClick = (serviceLabel: string) => {
     const serviceId = normalizeServiceName(serviceLabel); // Chuẩn hóa tên thành ID
@@ -117,6 +129,9 @@ const Home = () => {
   // <<< XÓA: Các handler handleSelectBranch và handleChooseOrChangeBranch không cần nữa >>>
 
   const currentPath = window.location.pathname;
+  const servicesToDisplay = showAllHomeServices
+    ? services
+    : services.slice(0, 4);
 
   // --- CSS Swiper (giữ nguyên) ---
   const swiperPaginationStyle = `
@@ -237,15 +252,18 @@ const Home = () => {
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
             <h2 className="font-bold text-lg">Dịch vụ</h2>
+            {/* <<< CẬP NHẬT NÚT XEM TẤT CẢ / ẨN BỚT >>> */}
             <button
-              onClick={() => handleViewAll("Dịch vụ")}
+              onClick={handleToggleServices} // Gọi hàm toggle mới
               className="text-orange-400 text-sm font-medium hover:underline cursor-pointer"
             >
-              Xem tất cả
+              {showAllHomeServices ? "Ẩn bớt" : "Xem tất cả"}
             </button>
           </div>
+          {/* Grid dịch vụ giờ sẽ hiển thị dựa trên state */}
           <div className="grid grid-cols-4 gap-4 text-center text-xs sm:text-sm text-gray-600">
-            {services.map((service, index) => (
+            {/* <<< SỬ DỤNG servicesToDisplay ĐỂ MAP >>> */}
+            {servicesToDisplay.map((service, index) => (
               <div
                 key={index}
                 onClick={() => handleServiceClick(service.label)}
