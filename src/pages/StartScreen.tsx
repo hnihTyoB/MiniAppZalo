@@ -9,7 +9,7 @@ const StartScreen = () => {
     // Giữ lại relative và h-full
     <div
       className="relative h-full w-full bg-cover bg-center"
-      style={{ backgroundImage: "url('/images/taoanhdep_ghibli_15139.jpeg')" }}
+      style={{ backgroundImage: "url('/images/bg_app.png')" }}
     >
       {/* Nút button giờ sẽ định vị đúng theo div này */}
       <button

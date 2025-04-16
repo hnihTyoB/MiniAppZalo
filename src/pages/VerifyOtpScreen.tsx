@@ -90,7 +90,7 @@ const VerifyOtpScreen = () => {
       {/* Nút Quay lại (giữ nguyên vị trí absolute) */}
       <button
         onClick={goBack}
-        className="absolute top-7 left-4 z-10 flex items-center gap-2 text-base text-white hover:text-gray-200 px-3 py-2 rounded" // Giữ màu trắng để nổi trên ảnh
+        className="absolute top-7 left-4 z-10 flex items-center gap-2 text-base text-gray-800 hover:text-gray-600 px-3 py-2 rounded" // Giữ màu trắng để nổi trên ảnh
       >
         <ChevronLeft size={25} /> {/* Icon lớn hơn */}
         <span className="text-lg font-medium">Quay lại</span>
@@ -101,9 +101,9 @@ const VerifyOtpScreen = () => {
         {" "}
         {/* Đặt chiều cao cho ảnh */}
         <img
-          src="/images/taoanhdep_ghibli_15139.jpeg" // Sử dụng cùng ảnh hoặc ảnh khác
+          src="/images/bg_app.png" // Sử dụng cùng ảnh hoặc ảnh khác
           alt="Ảnh nền OTP"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover object-[center_25%]"
         />
       </div>
 

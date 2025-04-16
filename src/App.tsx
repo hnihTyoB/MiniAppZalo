@@ -20,9 +20,11 @@ import Chat from "./pages/Chat";
 import Conversation from "./pages/Conversation";
 import Profile from "./pages/Profile";
 import BookingHistory from "./pages/BookingHistory"; // Đường dẫn đến component BookingHistory
+import AccountInfo from "./pages/AccountInfo";
 import VehicleManagement from "./pages/VehicleManagement"; // <<< Import trang quản lý xe
 import AddEditVehicle from "./pages/AddEditVehicle";
-import AccountInfo from "./pages/AccountInfo";
+import Version from "./pages/Version"; // <<< Import trang phiên bản
+import Help from "./pages/Help";
 import EditProfile from "./pages/EditProfile";
 
 const MainApp = () => {
@@ -50,10 +52,12 @@ const MainApp = () => {
           <Route path="/conversation/:branchId" element={<Conversation />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/booking-history" element={<BookingHistory />} />{" "}
+          <Route path="/account" element={<AccountInfo />} />
           <Route path="/vehicles" element={<VehicleManagement />} />{" "}
           <Route path="/add-vehicle" element={<AddEditVehicle />} />{" "}
           <Route path="/edit-vehicle/:vehicleId" element={<AddEditVehicle />} />{" "}
-          <Route path="/account" element={<AccountInfo />} />
+          <Route path="/version" element={<Version />} />{" "}
+          <Route path="/help" element={<Help />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           {/* Thêm các route khác nếu cần */}
         </Routes>

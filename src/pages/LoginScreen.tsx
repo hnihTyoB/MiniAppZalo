@@ -48,7 +48,7 @@ const LoginScreen = () => {
     <div className="relative flex flex-col h-full">
       <button
         onClick={goBack}
-        className="absolute top-7 left-4 z-10 flex items-center gap-2 text-base text-white hover:text-gray-200 px-3 py-2 rounded"
+        className="absolute top-7 left-4 z-10 flex items-center gap-2 text-base text-gray-800 hover:text-gray-600 px-3 py-2 rounded"
       >
         <ChevronLeft size={25} />
         <span className="text-lg font-medium">Quay lại</span>
@@ -56,9 +56,9 @@ const LoginScreen = () => {
 
       <div className="bg-gray-200 flex items-center justify-center h-[50%]">
         <img
-          src="/images/taoanhdep_ghibli_15139.jpeg"
+          src="/images/bg_app.png"
           alt="Ảnh"
-          className="h-full w-full object-cover"
+          className="h-full w-full object-cover object-[center_25%]"
         />
       </div>
 
