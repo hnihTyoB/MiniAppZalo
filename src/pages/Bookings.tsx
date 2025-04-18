@@ -101,7 +101,13 @@ const availableBranches: Branch[] = [
     address: "45 Lê Văn Việt, Tăng Nhơn Phú A, Quận 9, Thành phố Hồ Chí Minh",
   },
 ];
-const times = ["07:00 PM", "10:00 AM", "01:00 PM", "03:00 PM", "04:30 PM"];
+const times = [
+  "07:00 AM - 08:00 AM",
+  "08:00 AM - 09:00 AM",
+  "09:00 AM - 10:00 AM",
+  "10:00 AM - 11:00 AM",
+  "11:00 AM - 12:00 PM",
+];
 
 // --- Helper functions for localStorage (Vehicles & Default Vehicle) ---
 
@@ -432,6 +438,78 @@ const Booking = () => {
           )}
         </div>
 
+        {/* --- Phần Chi nhánh --- */}
+        <div className="mb-6">
+          <h3 className="font-semibold text-lg mb-3">Chi nhánh</h3>
+          {availableBranches.length > 0 ? (
+            <Select
+              label="Chọn chi nhánh"
+              placeholder="Chọn chi nhánh..."
+              value={selectedBranch?.id || ""}
+              onChange={handleBranchSelectChange}
+              status={!selectedBranch ? "error" : "default"}
+            >
+              {availableBranches.map((branch) => (
+                <Select.Option
+                  key={branch.id}
+                  value={branch.id}
+                  title={branch.name} // title vẫn có thể giữ nguyên hoặc cập nhật nếu muốn
+                >
+                  {/* Hiển thị tên và địa chỉ đầy đủ, cho phép xuống dòng tự nhiên */}
+                  <div>
+                    {" "}
+                    {/* Bọc trong div để kiểm soát layout tốt hơn nếu cần */}
+                    <span className="font-medium">{branch.name}</span>
+                    {branch.address && (
+                      <span className="block text-xs text-gray-500">
+                        {" "}
+                        {/* Dùng block để xuống hàng */}({branch.address})
+                      </span>
+                    )}
+                  </div>
+                </Select.Option>
+              ))}
+            </Select>
+          ) : (
+            <div className="h-24 bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-400">
+              <Building size={32} className="mb-1" />
+              <span className="text-sm">Chưa có chi nhánh nào</span>
+            </div>
+          )}
+          {/* Hiển thị ảnh và địa chỉ đầy đủ của chi nhánh đã chọn */}
+          {selectedBranch && (
+            <div className="mt-3 border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+              {selectedBranch.imageUrl ? (
+                <div className="w-full aspect-video bg-gray-100">
+                  <img
+                    src={selectedBranch.imageUrl}
+                    alt={selectedBranch.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
+                  <ImageIcon className="w-12 h-12 text-gray-400" />
+                </div>
+              )}
+              <div className="p-3 space-y-0.5">
+                <div className="font-semibold text-base truncate">
+                  {selectedBranch.name}
+                </div>
+                {selectedBranch.address && (
+                  <div className="text-sm text-gray-500 flex items-start gap-1">
+                    {" "}
+                    {/* items-start để icon thẳng hàng với dòng đầu */}
+                    <MapPin size={14} className="flex-shrink-0 mt-0.5" />
+                    {/* Không dùng truncate ở đây để hiển thị đầy đủ */}
+                    <span>{selectedBranch.address}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* --- Phần Dịch vụ --- */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
@@ -531,78 +609,6 @@ const Booking = () => {
           </div>
         </div>
 
-        {/* --- Phần Chi nhánh --- */}
-        <div className="mb-6">
-          <h3 className="font-semibold text-lg mb-3">Chi nhánh</h3>
-          {availableBranches.length > 0 ? (
-            <Select
-              label="Chọn chi nhánh"
-              placeholder="Chọn chi nhánh..."
-              value={selectedBranch?.id || ""}
-              onChange={handleBranchSelectChange}
-              status={!selectedBranch ? "error" : "default"}
-            >
-              {availableBranches.map((branch) => (
-                <Select.Option
-                  key={branch.id}
-                  value={branch.id}
-                  title={branch.name} // title vẫn có thể giữ nguyên hoặc cập nhật nếu muốn
-                >
-                  {/* Hiển thị tên và địa chỉ đầy đủ, cho phép xuống dòng tự nhiên */}
-                  <div>
-                    {" "}
-                    {/* Bọc trong div để kiểm soát layout tốt hơn nếu cần */}
-                    <span className="font-medium">{branch.name}</span>
-                    {branch.address && (
-                      <span className="block text-xs text-gray-500">
-                        {" "}
-                        {/* Dùng block để xuống hàng */}({branch.address})
-                      </span>
-                    )}
-                  </div>
-                </Select.Option>
-              ))}
-            </Select>
-          ) : (
-            <div className="h-24 bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-400">
-              <Building size={32} className="mb-1" />
-              <span className="text-sm">Chưa có chi nhánh nào</span>
-            </div>
-          )}
-          {/* Hiển thị ảnh và địa chỉ đầy đủ của chi nhánh đã chọn */}
-          {selectedBranch && (
-            <div className="mt-3 border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
-              {selectedBranch.imageUrl ? (
-                <div className="w-full aspect-video bg-gray-100">
-                  <img
-                    src={selectedBranch.imageUrl}
-                    alt={selectedBranch.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
-                  <ImageIcon className="w-12 h-12 text-gray-400" />
-                </div>
-              )}
-              <div className="p-3 space-y-0.5">
-                <div className="font-semibold text-base truncate">
-                  {selectedBranch.name}
-                </div>
-                {selectedBranch.address && (
-                  <div className="text-sm text-gray-500 flex items-start gap-1">
-                    {" "}
-                    {/* items-start để icon thẳng hàng với dòng đầu */}
-                    <MapPin size={14} className="flex-shrink-0 mt-0.5" />
-                    {/* Không dùng truncate ở đây để hiển thị đầy đủ */}
-                    <span>{selectedBranch.address}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* --- Calendar --- */}
         <div>
           <h3 className="font-semibold text-lg mb-3">Chọn ngày</h3>
@@ -689,7 +695,7 @@ const Booking = () => {
         {/* --- Giờ --- */}
         <div>
           <h3 className="font-semibold text-lg mb-3">Chọn giờ</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {times.map((time, i) => (
               <button
                 key={i}

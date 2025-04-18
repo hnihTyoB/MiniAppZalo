@@ -55,7 +55,7 @@ const ForgotPasswordScreen = () => {
       <div className="bg-white flex-1 rounded-t-3xl p-6 overflow-y-auto space-y-6">
         <h1 className="text-3xl font-bold text-center mb-4">Quên mật khẩu</h1>
         <p className="text-sm text-gray-600 text-center mb-4">
-          Nhập số điện thoại đã đăng ký để nhận hướng dẫn đặt lại mật khẩu.
+          Nhập số điện thoại đã đăng ký để nhận mã OTP đặt lại mật khẩu.
         </p>
         <input
           type="tel"

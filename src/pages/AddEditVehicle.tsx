@@ -1,9 +1,105 @@
 // src/pages/AddEditVehicle.tsx
-import React, { useState, useEffect, ChangeEvent } from "react";
+import Select, { StylesConfig } from "react-select";
+import React, { useState, useEffect, ChangeEvent, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Car, Trash2 } from "lucide-react";
 import { Vehicle } from "@/interfaces/Vehicle"; // <<< Import interface Vehicle
 
+const popularCarMakes = [
+  "Toyota",
+  "Honda",
+  "Ford",
+  "Hyundai",
+  "Kia",
+  "Mazda",
+  "Mitsubishi",
+  "Nissan",
+  "Suzuki",
+  "Mercedes-Benz",
+  "BMW",
+  "Audi",
+  "VinFast",
+  "Chevrolet",
+  "Peugeot",
+  "Lexus",
+  "Subaru",
+  "Volkswagen",
+].map((make) => ({ value: make, label: make }));
+// --- Dữ liệu dòng xe theo hãng (Ví dụ) ---
+// Trong ứng dụng thực tế, dữ liệu này nên lấy từ API
+// --- Kiểu dữ liệu cho option của react-select ---
+type SelectOptionType = { value: string; label: string } | null;
+
+// --- Danh sách hãng xe ---
+const carModelsByMake: { [key: string]: SelectOptionType[] } = {
+  Toyota: [
+    "Vios",
+    "Camry",
+    "Corolla Altis",
+    "Fortuner",
+    "Innova",
+    "Hilux",
+    "Raize",
+    "Veloz Cross",
+    "Yaris",
+    "Avanza",
+    "Wigo",
+  ].map((m) => ({ value: m, label: m })),
+  Honda: ["City", "Civic", "CR-V", "HR-V", "Accord", "Brio"].map((m) => ({
+    value: m,
+    label: m,
+  })),
+  Ford: ["Ranger", "Everest", "Territory", "Explorer", "Transit"].map((m) => ({
+    value: m,
+    label: m,
+  })),
+  Hyundai: [
+    "Accent",
+    "Grand i10",
+    "Creta",
+    "Tucson",
+    "Santa Fe",
+    "Stargazer",
+    "Elantra",
+    "Venue",
+  ].map((m) => ({ value: m, label: m })),
+  Kia: [
+    "Morning",
+    "Soluto",
+    "K3",
+    "K5",
+    "Seltos",
+    "Sonet",
+    "Sportage",
+    "Carnival",
+    "Carens",
+  ].map((m) => ({ value: m, label: m })),
+  Mazda: [
+    "Mazda2",
+    "Mazda3",
+    "Mazda6",
+    "CX-3",
+    "CX-30",
+    "CX-5",
+    "CX-8",
+    "BT-50",
+  ].map((m) => ({ value: m, label: m })),
+  Mitsubishi: ["Xpander", "Attrage", "Outlander", "Pajero Sport", "Triton"].map(
+    (m) => ({ value: m, label: m })
+  ),
+  VinFast: [
+    "Fadil",
+    "Lux A2.0",
+    "Lux SA2.0",
+    "VF e34",
+    "VF 5",
+    "VF 6",
+    "VF 7",
+    "VF 8",
+    "VF 9",
+  ].map((m) => ({ value: m, label: m })),
+  // Thêm các hãng và dòng xe khác nếu cần...
+};
 // --- Helper functions (Copy từ VehicleManagement hoặc import) ---
 const getVehiclesFromStorage = (): Vehicle[] => {
   try {
@@ -31,10 +127,10 @@ const AddEditVehicle = () => {
   const isEditing = !!vehicleId;
 
   // State cho form
-  const [make, setMake] = useState("");
-  const [model, setModel] = useState("");
+  const [make, setMake] = useState<SelectOptionType>(null);
+  const [model, setModel] = useState<SelectOptionType>(null); // <<< THAY ĐỔI: State cho model
   const [licensePlate, setLicensePlate] = useState("");
-  const [year, setYear] = useState<number | string>(""); // Dùng string để input dễ xử lý hơn
+  const [year, setYear] = useState<number | string>("");
   const [vin, setVin] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -44,8 +140,24 @@ const AddEditVehicle = () => {
       const vehicles = getVehiclesFromStorage();
       const vehicleToEdit = vehicles.find((v) => v.id === vehicleId);
       if (vehicleToEdit) {
-        setMake(vehicleToEdit.make);
-        setModel(vehicleToEdit.model);
+        const makeOption = popularCarMakes.find(
+          (option) => option?.value === vehicleToEdit.make
+        );
+        setMake(makeOption || null);
+
+        // <<< THAY ĐỔI: Tìm và set model option >>>
+        const modelsForMake = makeOption
+          ? carModelsByMake[makeOption.value] || []
+          : [];
+        const modelOption = modelsForMake.find(
+          (option) => option?.value === vehicleToEdit.model
+        );
+        setModel(modelOption || null);
+        // Nếu không tìm thấy model trong danh sách gợi ý, có thể set giá trị thô (tùy chọn)
+        // if (!modelOption && vehicleToEdit.model) {
+        //   setModel({ value: vehicleToEdit.model, label: vehicleToEdit.model });
+        // }
+
         setLicensePlate(vehicleToEdit.licensePlate);
         setYear(vehicleToEdit.year?.toString() || "");
         setVin(vehicleToEdit.vin || "");
@@ -53,7 +165,7 @@ const AddEditVehicle = () => {
       } else {
         console.error("Vehicle not found for editing:", vehicleId);
         alert("Không tìm thấy thông tin xe để chỉnh sửa.");
-        navigate("/vehicles"); // Quay lại danh sách nếu không tìm thấy
+        navigate("/vehicles");
       }
     }
   }, [isEditing, vehicleId, navigate]);
@@ -63,8 +175,10 @@ const AddEditVehicle = () => {
   };
 
   const handleSave = () => {
+    const makeValue = make?.value;
+    const modelValue = model?.value; // <<< THAY ĐỔI: Lấy giá trị model
     // Validation cơ bản
-    if (!make || !model || !licensePlate) {
+    if (!makeValue || !modelValue || !licensePlate) {
       alert("Vui lòng nhập Hãng xe, Dòng xe và Biển số.");
       return;
     }
@@ -72,8 +186,8 @@ const AddEditVehicle = () => {
     const currentVehicles = getVehiclesFromStorage();
     const vehicleData: Vehicle = {
       id: isEditing && vehicleId ? vehicleId : `vehicle_${Date.now()}`, // Tạo ID mới nếu là add
-      make: make.trim(),
-      model: model.trim(),
+      make: makeValue.trim(),
+      model: modelValue.trim(), // <<< THAY ĐỔI: Sử dụng modelValue
       licensePlate: licensePlate.trim().toUpperCase(), // Chuẩn hóa biển số
       year: year ? parseInt(String(year), 10) : undefined,
       vin: vin.trim() || undefined,
@@ -122,6 +236,38 @@ const AddEditVehicle = () => {
       setYear(value);
     }
   };
+  // --- Lọc danh sách dòng xe dựa trên hãng đã chọn ---
+  const availableModels = useMemo(() => {
+    if (!make) return [];
+    return carModelsByMake[make.value] || [];
+  }, [make]);
+
+  // --- Style cho react-select (có thể dùng chung) ---
+  const selectStyles: StylesConfig<SelectOptionType, false> = {
+    control: (baseStyles, state) => ({
+      ...baseStyles,
+      borderColor: state.isFocused ? "#F9A826" : "#D1D5DB",
+      boxShadow: state.isFocused ? "0 0 0 1px #F9A826" : "none",
+      "&:hover": {
+        borderColor: state.isFocused ? "#F9A826" : "#9CA3AF",
+      },
+      padding: "0.3rem",
+      borderRadius: "0.5rem",
+    }),
+    option: (baseStyles, state) => ({
+      ...baseStyles,
+      backgroundColor: state.isSelected
+        ? "#F9A826"
+        : state.isFocused
+        ? "#FEF3C7"
+        : "white",
+      color: state.isSelected ? "white" : "black",
+      "&:active": {
+        backgroundColor: "#FDBA74",
+      },
+    }),
+    // Thêm các tùy chỉnh khác nếu cần
+  };
 
   return (
     <div className="h-screen flex flex-col bg-white">
@@ -157,38 +303,57 @@ const AddEditVehicle = () => {
         {/* Hãng xe */}
         <div>
           <label
-            htmlFor="make"
+            htmlFor="make-select"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             Hãng xe <span className="text-red-500">*</span>
           </label>
-          <input
-            id="make"
-            type="text"
+          <Select
+            id="make-select"
+            options={popularCarMakes}
             value={make}
-            onChange={(e) => setMake(e.target.value)}
-            placeholder="VD: Toyota, Honda, Ford..."
-            required
-            className="w-full border border-gray-300 rounded-lg p-3 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none"
+            // <<< THAY ĐỔI: Reset model khi đổi hãng >>>
+            onChange={(selectedOption) => {
+              setMake(selectedOption);
+              setModel(null); // Reset dòng xe khi hãng thay đổi
+            }}
+            placeholder="Chọn hoặc nhập hãng xe..."
+            isClearable
+            isSearchable
+            styles={selectStyles} // <<< Sử dụng style chung
           />
         </div>
 
-        {/* Dòng xe */}
+        {/* Dòng xe (SỬ DỤNG react-select) */}
         <div>
           <label
-            htmlFor="model"
+            htmlFor="model-select"
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             Dòng xe <span className="text-red-500">*</span>
           </label>
-          <input
-            id="model"
-            type="text"
+          <Select
+            id="model-select"
+            options={availableModels} // <<< Sử dụng danh sách đã lọc
             value={model}
-            onChange={(e) => setModel(e.target.value)}
-            placeholder="VD: Camry, Civic, Ranger..."
-            required
-            className="w-full border border-gray-300 rounded-lg p-3 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none"
+            onChange={(selectedOption) => setModel(selectedOption)}
+            placeholder={
+              make ? "Chọn hoặc nhập dòng xe..." : "Vui lòng chọn hãng xe trước"
+            }
+            isClearable
+            isSearchable
+            isDisabled={!make} // <<< Vô hiệu hóa nếu chưa chọn hãng
+            styles={selectStyles} // <<< Sử dụng style chung
+            noOptionsMessage={() =>
+              make ? "Không tìm thấy dòng xe" : "Chưa chọn hãng xe"
+            }
+            // (Tùy chọn) Cho phép tạo mới nếu không có trong danh sách
+            // formatCreateLabel={(inputValue) => `Thêm "${inputValue}"`}
+            // onCreateOption={(inputValue) => {
+            //   const newOption = { value: inputValue, label: inputValue };
+            //   // Cập nhật danh sách tạm thời hoặc state nếu cần
+            //   setModel(newOption);
+            // }}
           />
         </div>
 
