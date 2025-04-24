@@ -86,8 +86,8 @@ import Notifications from "./pages/Notifications";
 import Booking from "./pages/Bookings";
 import Schedule from "./pages/Schedule";
 import BookingConfirmation from "./pages/BookingConfirmation";
-import Chat from "./pages/Chat";
-import Conversation from "./pages/Conversation";
+// import Chat from "./pages/Chat";
+// import Conversation from "./pages/Conversation";
 import Profile from "./pages/Profile";
 import BookingHistory from "./pages/BookingHistory";
 import AccountInfo from "./pages/AccountInfo";
@@ -142,8 +142,8 @@ const MainApp = () => {
             path="/booking-confirmation"
             element={<BookingConfirmation />}
           />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/conversation/:branchId" element={<Conversation />} />
+          {/* <Route path="/chat" element={<Chat />} /> */}
+          {/* <Route path="/conversation/:branchId" element={<Conversation />} /> */}
           <Route path="/profile" element={<Profile />} />
           <Route path="/booking-history" element={<BookingHistory />} />
           <Route path="/account" element={<AccountInfo />} />

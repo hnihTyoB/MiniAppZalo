@@ -27,7 +27,7 @@ const initialMockData: ScheduleItem[] = [
     branch: "PTIT – Chi nhánh 1",
     services: ["Thay lốp"], // <<< SỬA Ở ĐÂY: Đổi thành services và đặt trong mảng
     date: "20 / 03 / 2025",
-    time: "10:00 AM",
+    time: "10:00 AM - 12:00 AM",
     reminder: false,
     status: "upcoming",
   },
@@ -36,7 +36,7 @@ const initialMockData: ScheduleItem[] = [
     branch: "PTIT – Chi nhánh 2",
     services: ["Rửa xe"], // <<< SỬA Ở ĐÂY
     date: "22 / 03 / 2025",
-    time: "07:00 AM",
+    time: "07:00 AM - 09:00 AM",
     reminder: true,
     status: "upcoming",
   },
@@ -45,7 +45,7 @@ const initialMockData: ScheduleItem[] = [
     branch: "PTIT – Chi nhánh 3",
     services: ["Thay nhớt"], // <<< SỬA Ở ĐÂY
     date: "12 / 03 / 2024",
-    time: "11:00 AM",
+    time: "11:00 AM - 12:00 AM",
     reminder: false,
     status: "done",
   },
@@ -54,7 +54,7 @@ const initialMockData: ScheduleItem[] = [
     branch: "PTIT – Chi nhánh 1",
     services: ["Bảo dưỡng định kỳ"], // <<< SỬA Ở ĐÂY
     date: "15 / 04 / 2024",
-    time: "09:00 AM",
+    time: "09:00 AM - 10:30 AM",
     reminder: true,
     status: "upcoming",
   },
@@ -63,7 +63,7 @@ const initialMockData: ScheduleItem[] = [
     branch: "PTIT – Chi nhánh 4",
     services: ["Kiểm tra tổng quát"], // <<< SỬA Ở ĐÂY
     date: "01 / 02 / 2024",
-    time: "02:00 PM",
+    time: "02:00 PM - 04:00 PM",
     reminder: false,
     status: "done",
   },
@@ -104,7 +104,7 @@ export default function Schedule() {
 
   // --- Các hàm xử lý khác (giữ nguyên) ---
   const goBack = () => {
-    navigate(-1);
+    navigate("/bookings");
   };
   const handleClearDone = () => {
     setItems((prev) => prev.filter((item) => item.status !== "done"));
@@ -163,7 +163,7 @@ export default function Schedule() {
   });
 
   return (
-    <div className="h-full overflow-y-auto bg-white pb-20 max-w-md mx-auto relative">
+    <div className="h-full overflow-y-auto bg-white pb-20 max-w-md mx-auto relative mt-3">
       {/* Header */}
       <div className="sticky top-0 h-16 px-4 flex items-center justify-center bg-white z-20 border-b">
         <button

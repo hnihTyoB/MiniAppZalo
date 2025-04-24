@@ -76,13 +76,13 @@ const EditProfile = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-screen flex flex-col bg-white mt-3">
       {/* Header */}
       <div className="flex items-center p-4 border-b sticky top-0 bg-white z-10">
         <button onClick={() => navigate(-1)} className="p-1 mr-2 -ml-1">
           <ChevronLeft size={25} />
         </button>
-        <h2 className="text-xl font-semibold text-center flex-1">
+        <h2 className="text-2xl font-semibold text-center flex-1">
           Chỉnh sửa thông tin
         </h2>
         <div className="w-8"></div> {/* Placeholder for balance */}

@@ -11,7 +11,7 @@ const Version = () => {
   };
 
   // --- Thông tin phiên bản (Có thể lấy từ biến môi trường hoặc file config) ---
-  const appName = "PTIT Auto Care"; // <<< Tên ứng dụng của bạn
+  const appName = "G2 Schedual a car repair"; // <<< Tên ứng dụng của bạn
   const appVersion = "1.0.0"; // <<< Phiên bản hiện tại
   const buildNumber = "20240726.1"; // <<< Số bản dựng (tùy chọn)
   const copyrightYear = new Date().getFullYear();

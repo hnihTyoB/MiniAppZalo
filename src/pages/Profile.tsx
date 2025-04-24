@@ -13,17 +13,20 @@ import {
   MessageCircle,
   Car, // <<< THÊM ICON XE
 } from "lucide-react";
+import { openOAChat } from "@/utils/zalo";
 
 // ... (interfaces và navItems giữ nguyên) ...
 interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  action?: () => void; // <<< Thêm action tùy chọn
 }
 const navItems: NavItem[] = [
   { icon: HomeIcon, label: "Home", path: "/home" },
   { icon: CalendarDays, label: "Bookings", path: "/bookings" },
-  { icon: MessageCircle, label: "Chat", path: "/chat" },
+  // { icon: MessageCircle, label: "Chat", path: "/chat" },
+  { icon: MessageCircle, label: "Chat", path: "/chat", action: openOAChat }, // <<< Sử dụng action
   { icon: User, label: "Profile", path: "/profile" },
 ];
 
@@ -50,10 +53,10 @@ const Profile = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white pb-20 overflow-y-auto">
+    <div className="h-screen flex flex-col bg-white pb-20 overflow-y-auto mt-3">
       {/* Phần nội dung chính */}
       <div className="p-4 flex-grow">
-        <h1 className="text-center text-xl font-semibold mb-6">Profile</h1>
+        <h1 className="text-center text-2xl font-semibold mb-6">Profile</h1>
 
         {/* Thông tin User (giữ nguyên) */}
         <div className="flex flex-col items-center mb-8">
@@ -88,7 +91,14 @@ const Profile = () => {
         {navItems.map((item, index) => (
           <button
             key={index}
-            onClick={() => navigate(item.path)}
+            // onClick={() => navigate(item.path)}
+            onClick={() => {
+              if (item.action) {
+                item.action(); // <<< Gọi action nếu có
+              } else {
+                navigate(item.path); // <<< Điều hướng như cũ nếu không có action
+              }
+            }}
             className={`flex flex-col items-center gap-0.5 ${
               currentPath === item.path ? "text-orange-500" : "text-gray-500"
             } hover:text-orange-400 transition-colors duration-200`}

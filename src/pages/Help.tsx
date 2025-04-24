@@ -16,6 +16,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"; // Giả sử dùng shadcn/ui
+import { openOAChat } from "@/utils/zalo"; // <<< Import hàm tiện ích
 
 // --- Dữ liệu FAQ mẫu ---
 const faqData = [
@@ -62,13 +63,13 @@ const Help = () => {
   );
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 mt-3">
       {/* Header */}
       <div className="sticky top-0 flex items-center p-4 border-b bg-white z-10">
         <button onClick={goBack} className="p-1 mr-2 -ml-1 text-gray-600">
           <ChevronLeft size={25} />
         </button>
-        <h2 className="text-xl font-semibold text-center flex-1 text-gray-800">
+        <h2 className="text-2xl font-semibold text-center flex-1 text-gray-800">
           Trợ giúp & Hỗ trợ
         </h2>
         <div className="w-8"></div> {/* Placeholder */}
@@ -155,7 +156,8 @@ const Help = () => {
             </div>
             {/* Chat (Tùy chọn) */}
             <button
-              onClick={() => navigate("/chat")} // <<< Điều hướng đến trang chat chung hoặc chat hỗ trợ riêng
+              // onClick={() => navigate("/chat")} // <<< Điều hướng đến trang chat chung hoặc chat hỗ trợ riêng
+              onClick={() => openOAChat()}
               className="w-full mt-3 bg-orange-50 hover:bg-orange-100 text-orange-600 font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors border border-orange-200"
             >
               <MessageCircle size={16} /> Gửi tin nhắn hỗ trợ

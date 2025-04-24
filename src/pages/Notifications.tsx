@@ -89,7 +89,7 @@ const initialMockData: NotificationItem[] = [
       branch: "PTIT – Chi nhánh 1",
       services: ["Thay lốp"],
       date: "01 / 05 / 2025", // Ngày gần để test countdown
-      time: "10:00 AM",
+      time: "10:00 AM - 12:00 AM",
       status: "upcoming",
     },
     imageUrl: "/images/branch-1.jpg",
@@ -104,7 +104,7 @@ const initialMockData: NotificationItem[] = [
       branch: "PTIT – Chi nhánh 2",
       services: ["Rửa xe", "Thay dầu"], // Ví dụ nhiều dịch vụ
       date: "25 / 07 / 2024", // Ngày gần
-      time: "07:00 AM",
+      time: "07:00 AM - 08:30 AM",
       status: "upcoming",
     },
     imageUrl: "/images/branch-2.jpg",
@@ -119,7 +119,7 @@ const initialMockData: NotificationItem[] = [
       branch: "PTIT – Chi nhánh 3",
       services: ["Thay nhớt"],
       date: "12 / 07 / 2024", // Ngày trong quá khứ
-      time: "11:00 AM",
+      time: "11:00 AM - 12:00 AM",
       status: "done",
     },
   },
@@ -319,7 +319,7 @@ export default function Notifications() {
 
   // --- Render ---
   return (
-    <div className="h-full overflow-y-auto bg-white pb-20 max-w-md mx-auto relative">
+    <div className="h-full overflow-y-auto bg-white pb-20 max-w-md mx-auto relative mt-3">
       {/* Header */}
       <div className="sticky top-0 h-16 px-4 flex items-center justify-center bg-white z-20 border-b">
         <button
@@ -328,7 +328,7 @@ export default function Notifications() {
         >
           <ChevronLeft size={25} />
         </button>
-        <h1 className="text-xl font-semibold text-gray-800">Thông báo</h1>
+        <h1 className="text-2xl font-semibold text-gray-800">Thông báo</h1>
       </div>
 
       {/* Thanh tìm kiếm */}

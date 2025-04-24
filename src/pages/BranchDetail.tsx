@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import clsx from "clsx";
+import { openOAChat } from "@/utils/zalo";
 
 // Interface Branch (giống Home.tsx và Bookings.tsx)
 interface Branch {
@@ -128,6 +129,11 @@ const sampleReviews: ReviewItem[] = [
   },
 ];
 
+// <<< Giả sử bạn có map từ branch.id sang OA ID (hoặc dùng OA ID chính) >>>
+const branchOaIdMap: { [key: number]: string } = {
+  1: "3103109239621189141", // Thay thế bằng OA ID thực tế
+};
+
 // --- Component hiển thị sao ---
 const RatingStars: React.FC<{ rating: number; size?: number }> = ({
   rating,
@@ -177,6 +183,12 @@ const BranchDetail = () => {
       month: "2-digit",
       year: "numeric",
     });
+  };
+
+  const handleOpenBranchChat = () => {
+    // Lấy OA ID cụ thể cho chi nhánh này, hoặc dùng OA ID chính nếu không có
+    const targetOaId = branchOaIdMap[branch.id] || undefined; // Lấy OA ID riêng nếu có
+    openOAChat(targetOaId, `Tôi cần hỗ trợ tại chi nhánh ${branch.name}`); // Truyền OA ID riêng (nếu có) và tin nhắn mở đầu
   };
 
   return (
@@ -483,18 +495,19 @@ const BranchDetail = () => {
             </button>
             {/* Nút nhắn tin */}
             <button
-              onClick={() =>
-                navigate(`/conversation/${branch.id}`, {
-                  state: {
-                    branchInfo: {
-                      id: branch.id,
-                      name: branch.name,
-                      avatarUrl: branch.imageUrl,
-                      // isActive: branch.isActive // Cần thêm isActive vào Branch interface nếu có
-                    },
-                  },
-                })
-              }
+              // onClick={() =>
+              //   navigate(`/conversation/${branch.id}`, {
+              //     state: {
+              //       branchInfo: {
+              //         id: branch.id,
+              //         name: branch.name,
+              //         avatarUrl: branch.imageUrl,
+              //         // isActive: branch.isActive // Cần thêm isActive vào Branch interface nếu có
+              //       },
+              //     },
+              //   })
+              // }
+              onClick={handleOpenBranchChat}
               className="bg-gray-100 p-2.5 rounded-full hover:bg-orange-100 transition-colors"
             >
               <MessageCircle size={18} className="text-orange-500" />

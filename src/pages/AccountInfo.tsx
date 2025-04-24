@@ -22,7 +22,7 @@ const AccountInfo = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-screen flex flex-col bg-white mt-3">
       {/* Header */}
       <div className="flex items-center p-4 border-b sticky top-0 bg-white z-10">
         <button onClick={() => navigate(-1)} className="p-1 mr-2 -ml-1">

@@ -250,7 +250,7 @@ export default function BookingHistory() {
 
   // --- Render ---
   return (
-    <div className="h-full overflow-y-auto bg-gray-50 pb-5 max-w-md mx-auto relative">
+    <div className="h-full overflow-y-auto bg-gray-50 pb-5 max-w-md mx-auto mt-3">
       {/* Header */}
       <div className="sticky top-0 h-16 px-4 flex items-center justify-center bg-white z-20 border-b">
         <button
@@ -259,7 +259,7 @@ export default function BookingHistory() {
         >
           <ChevronLeft size={25} />
         </button>
-        <h1 className="text-xl font-semibold text-gray-800">
+        <h1 className="text-2xl font-semibold text-gray-800">
           Lịch sử đặt lịch
         </h1>
       </div>

@@ -270,7 +270,7 @@ const AddEditVehicle = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-screen flex flex-col bg-white mt-3">
       {/* Header */}
       <div className="sticky top-0 flex items-center p-4 border-b bg-white z-10">
         <button onClick={goBack} className="p-1 mr-2 -ml-1 text-gray-600">
@@ -279,18 +279,20 @@ const AddEditVehicle = () => {
         <h2 className="text-xl font-semibold text-center flex-1 text-gray-800">
           {isEditing ? "Chỉnh sửa xe" : "Thêm xe mới"}
         </h2>
-        {/* Nút xóa chỉ hiển thị khi chỉnh sửa */}
-        {isEditing ? (
-          <button
-            onClick={handleDelete}
-            className="p-1 text-red-500"
-            aria-label="Xóa xe"
-          >
-            <Trash2 size={20} />
-          </button>
-        ) : (
-          <div className="w-8"></div> /* Placeholder */
-        )}
+        {/* <<< XÓA HOÀN TOÀN PHẦN NÚT XÓA VÀ PLACEHOLDER CŨ >>> */}
+        {/* {isEditing ? (
+         <button
+           onClick={handleDelete}
+           className="p-1 text-red-500"
+           aria-label="Xóa xe"
+         >
+           <Trash2 size={20} />
+         </button>
+       ) : (
+         <div className="w-8"></div>
+       )} */}
+        {/* <<< THÊM LẠI PLACEHOLDER ĐỂ CÂN BẰNG HEADER >>> */}
+        <div className="w-8"></div>
       </div>
 
       {/* Form nhập liệu */}

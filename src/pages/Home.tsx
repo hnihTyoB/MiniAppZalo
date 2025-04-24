@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
+import { openOAChat } from "@/utils/zalo";
 import "swiper/css";
 import "swiper/css/pagination";
 import {
@@ -34,6 +35,7 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  action?: () => void; // <<< Thêm action tùy chọn
 }
 interface Branch {
   id: number;
@@ -56,7 +58,8 @@ const services: ServiceItem[] = [
 const navItems: NavItem[] = [
   { icon: HomeIcon, label: "Home", path: "/home" },
   { icon: CalendarDays, label: "Bookings", path: "/bookings" },
-  { icon: MessageCircle, label: "Chat", path: "/chat" },
+  // { icon: MessageCircle, label: "Chat", path: "/chat" },
+  { icon: MessageCircle, label: "Chat", path: "/chat", action: openOAChat }, // <<< Sử dụng action
   { icon: User, label: "Profile", path: "/profile" },
 ];
 const availableBranches: Branch[] = [
@@ -141,40 +144,54 @@ const Home = () => {
   `;
 
   return (
-    <div className="flex flex-col h-screen bg-white pb-20 overflow-y-auto">
+    <div className="flex flex-col h-screen bg-white pb-20 overflow-y-auto mt-3">
       <style>{swiperPaginationStyle}</style>
-
-      <div className="p-4 flex-grow">
+      {/* <<< THÊM sticky VÀO HEADER >>> */}
+      <div className="sticky top-0 bg-white z-10 px-4 pt-4 pb-3 border-b">
+        {" "}
+        {/* Thêm padding và border */}
         {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <div className="text-sm text-gray-500">Địa điểm</div>
-            <div className="text-base font-semibold flex items-center gap-1">
-              <MapPin className="w-4 h-4 text-orange-500" />
-              TP. Hồ Chí Minh, Việt Nam
-            </div>
-          </div>
-          <button onClick={() => navigate("/notifications")} className="p-1">
+        <div className="relative flex justify-center items-center mb-4">
+          {" "}
+          {/* Thêm relative và justify-center */}
+          {/* Nút chuông ở bên trái */}
+          <button
+            onClick={() => navigate("/notifications")}
+            className="absolute left-0 p-1" /* Thêm absolute left-0 */
+          >
             <Bell className="w-6 h-6 text-orange-500 hover:text-orange-600" />
           </button>
+          {/* Tên App ở giữa */}
+          <h1 className="text-2xl font-bold text-orange-500">
+            G2 Schedual a car repair
+          </h1>
+          {/* Placeholder để cân bằng (nếu cần) */}
+          <div className="absolute right-0 w-6"></div> {/* Placeholder */}
         </div>
-
         {/* Search and Filter */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex items-center px-3 py-2 bg-gray-100 rounded-lg flex-1">
-            <Search className="w-5 h-5 text-gray-500 mr-2 flex-shrink-0" />
-            <input
-              className="bg-transparent outline-none w-full text-sm"
-              placeholder="Tìm kiếm dịch vụ, chi nhánh..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        {/* <<< THÊM sticky VÀO SEARCH BAR >>> */}
+        {/* Giả sử header cao khoảng 68px (tính cả padding), top-[68px] */}
+        <div className="sticky top-[68px] bg-white z-10 py-2">
+          {" "}
+          {/* Thêm py-2 */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center px-3 py-2 bg-gray-100 rounded-lg flex-1">
+              <Search className="w-5 h-5 text-gray-500 mr-2 flex-shrink-0" />
+              <input
+                className="bg-transparent outline-none w-full text-sm"
+                placeholder="Tìm kiếm dịch vụ, chi nhánh..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <button className="p-2 bg-orange-400 hover:bg-orange-500 text-white rounded-lg">
+              <SlidersHorizontal className="w-5 h-5" />
+            </button>
           </div>
-          <button className="p-2 bg-orange-400 hover:bg-orange-500 text-white rounded-lg">
-            <SlidersHorizontal className="w-5 h-5" />
-          </button>
         </div>
+      </div>
 
+      <div className="p-4 flex-grow">
         {/* Khuyến mãi */}
         <div className="mb-6 relative">
           <div className="flex justify-between items-center mb-3">
@@ -353,7 +370,14 @@ const Home = () => {
         {navItems.map((item, index) => (
           <button
             key={index}
-            onClick={() => navigate(item.path)}
+            // onClick={() => navigate(item.path)}
+            onClick={() => {
+              if (item.action) {
+                item.action(); // <<< Gọi action nếu có
+              } else {
+                navigate(item.path); // <<< Điều hướng như cũ nếu không có action
+              }
+            }}
             className={`flex flex-col items-center gap-0.5 ${
               currentPath === item.path ? "text-orange-500" : "text-gray-500"
             } hover:text-orange-400 transition-colors duration-200`}

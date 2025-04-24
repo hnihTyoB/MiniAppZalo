@@ -78,7 +78,7 @@ const BranchListPage = () => {
   };
 
   return (
-    <div className="h-screen bg-white flex flex-col">
+    <div className="h-screen bg-white flex flex-col mt-3">
       {/* Header */}
       <div className="sticky top-0 h-16 px-4 flex items-center justify-center bg-white z-20 border-b">
         <button

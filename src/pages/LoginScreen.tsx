@@ -22,7 +22,7 @@ const LoginScreen = () => {
   };
 
   const goBack = () => {
-    navigate(-1);
+    navigate("/");
   };
 
   // --- Hàm xử lý đăng nhập ---

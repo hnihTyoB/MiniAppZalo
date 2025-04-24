@@ -27,12 +27,14 @@ import {
 } from "lucide-react";
 import { Select, Checkbox } from "zmp-ui";
 import { Vehicle } from "@/interfaces/Vehicle";
+import { openOAChat } from "@/utils/zalo";
 
 // --- Interfaces ---
 interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  action?: () => void; // <<< Thêm action tùy chọn
 }
 interface Service {
   name: string;
@@ -68,7 +70,8 @@ interface ScheduleItem {
 const navItems: NavItem[] = [
   { icon: HomeIcon, label: "Home", path: "/home" },
   { icon: CalendarIcon, label: "Bookings", path: "/bookings" },
-  { icon: MessageCircle, label: "Chat", path: "/chat" },
+  // { icon: MessageCircle, label: "Chat", path: "/chat" },
+  { icon: MessageCircle, label: "Chat", path: "/chat", action: openOAChat }, // <<< Sử dụng action
   { icon: User, label: "Profile", path: "/profile" },
 ];
 const allServices: Service[] = [
@@ -343,17 +346,17 @@ const Booking = () => {
     : allServices.filter((s) => selectedServiceNames.includes(s.name));
 
   return (
-    <div className="flex flex-col h-screen bg-white pb-36">
+    <div className="flex flex-col h-screen bg-white pb-36 mt-3">
       {/* Header */}
       {/* <<< THÊM NÚT ICON VÀO HEADER >>> */}
       <div className="sticky top-0 flex items-center justify-center p-4 border-b bg-white z-10">
         {/* Nút quay lại (nếu có) */}
         {/* <button onClick={() => navigate(-1)} className="absolute left-4 ..."><ChevronLeft /></button> */}
-        <h2 className="text-xl font-semibold text-center flex-1">Đặt lịch</h2>
+        <h2 className="text-2xl font-semibold text-center flex-1">Đặt lịch</h2>
         {/* Nút chuyển đến trang Schedule */}
         <button
           onClick={() => navigate("/schedule")}
-          className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-orange-500 hover:bg-orange-50 rounded-full"
+          className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-orange-500 hover:bg-orange-50 rounded-full"
           aria-label="Xem lịch hẹn"
         >
           <ListChecks size={22} />
@@ -461,7 +464,7 @@ const Booking = () => {
                     {/* Bọc trong div để kiểm soát layout tốt hơn nếu cần */}
                     <span className="font-medium">{branch.name}</span>
                     {branch.address && (
-                      <span className="block text-xs text-gray-500">
+                      <span className="block text-xs text-gray-500 whitespace-normal">
                         {" "}
                         {/* Dùng block để xuống hàng */}({branch.address})
                       </span>
@@ -735,7 +738,14 @@ const Booking = () => {
         {navItems.map((item) => (
           <button
             key={item.path}
-            onClick={() => navigate(item.path)}
+            // onClick={() => navigate(item.path)}
+            onClick={() => {
+              if (item.action) {
+                item.action(); // <<< Gọi action nếu có
+              } else {
+                navigate(item.path); // <<< Điều hướng như cũ nếu không có action
+              }
+            }}
             className={`flex flex-col items-center gap-0.5 ${
               currentPath === item.path ? "text-orange-500" : "text-gray-500"
             } hover:text-orange-400 transition-colors duration-200`}
