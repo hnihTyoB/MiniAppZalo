@@ -154,27 +154,32 @@ const Home = () => {
         <div className="relative flex justify-center items-center mb-4">
           {" "}
           {/* Thêm relative và justify-center */}
-          {/* Nút chuông ở bên trái */}
-          <button
-            onClick={() => navigate("/notifications")}
-            className="absolute left-0 p-1" /* Thêm absolute left-0 */
-          >
-            <Bell className="w-6 h-6 text-orange-500 hover:text-orange-600" />
-          </button>
+          {/* <<< XÓA NÚT CHUÔNG Ở ĐÂY >>> */}
+          {/* <button
+           onClick={() => navigate("/notifications")}
+           className="absolute left-0 p-1"
+         >
+           <Bell className="w-6 h-6 text-orange-500 hover:text-orange-600" />
+         </button> */}
           {/* Tên App ở giữa */}
           <h1 className="text-2xl font-bold text-orange-500">
             G2 Schedual a car repair
           </h1>
           {/* Placeholder để cân bằng (nếu cần) */}
-          <div className="absolute right-0 w-6"></div> {/* Placeholder */}
+          {/* <div className="absolute right-0 w-6"></div> */}{" "}
+          {/* Có thể bỏ nếu không cần đối xứng */}
         </div>
         {/* Search and Filter */}
         {/* <<< THÊM sticky VÀO SEARCH BAR >>> */}
-        {/* Giả sử header cao khoảng 68px (tính cả padding), top-[68px] */}
-        <div className="sticky top-[68px] bg-white z-10 py-2">
+        {/* Giả sử header cao khoảng 56px (tính cả padding), top-[56px] */}
+        <div className="sticky top-[56px] bg-white z-10 py-2">
           {" "}
-          {/* Thêm py-2 */}
+          {/* Điều chỉnh top nếu cần */} {/* Thêm py-2 */}
+          {/* <<< THAY ĐỔI LAYOUT SEARCH VÀ BELL >>> */}
           <div className="flex items-center gap-2">
+            {" "}
+            {/* Giữ flex và gap */}
+            {/* Search Input */}
             <div className="flex items-center px-3 py-2 bg-gray-100 rounded-lg flex-1">
               <Search className="w-5 h-5 text-gray-500 mr-2 flex-shrink-0" />
               <input
@@ -184,9 +189,17 @@ const Home = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <button className="p-2 bg-orange-400 hover:bg-orange-500 text-white rounded-lg">
-              <SlidersHorizontal className="w-5 h-5" />
+            {/* Nút Chuông thay thế nút Filter */}
+            <button
+              onClick={() => navigate("/notifications")}
+              className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg flex-shrink-0" /* Style lại nút chuông */
+            >
+              <Bell className="w-6 h-6" /> {/* Giữ kích thước icon */}
             </button>
+            {/* <<< XÓA NÚT FILTER CŨ >>> */}
+            {/* <button className="p-2 bg-orange-400 hover:bg-orange-500 text-white rounded-lg">
+             <SlidersHorizontal className="w-5 h-5" />
+           </button> */}
           </div>
         </div>
       </div>
