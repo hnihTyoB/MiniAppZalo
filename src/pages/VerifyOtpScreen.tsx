@@ -62,8 +62,18 @@ const VerifyOtpScreen = () => {
       return;
     }
     console.log("Xác thực OTP:", enteredOtp, "cho SĐT:", phoneNumber);
-    alert("Đã gửi OTP (Kiểm tra console log)");
-    // navigate('/reset-password', { state: { phoneNumber, otp: enteredOtp } });
+    // --- SIMULATE OTP VERIFICATION ---
+    const isOtpCorrect = true; // Replace with actual API check
+    // --- END SIMULATION ---
+
+    if (isOtpCorrect) {
+      alert("Xác thực OTP thành công!");
+      navigate("/reset-password", {
+        state: { phoneNumber /*, otp: enteredOtp or token */ },
+      }); // <<< NAVIGATE TO RESET PASSWORD
+    } else {
+      alert("Mã OTP không đúng. Vui lòng thử lại.");
+    }
   };
 
   const handleResendOtp = () => {

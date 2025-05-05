@@ -1,6 +1,6 @@
 // src/pages/AccountInfo.tsx
 import React from "react";
-import { ChevronLeft, User } from "lucide-react"; // Đổi lại thứ tự import cho nhất quán
+import { ChevronLeft, User, Lock } from "lucide-react"; // <<< THÊM ICON Lock >>>
 import { useNavigate } from "react-router-dom";
 
 const AccountInfo = () => {
@@ -19,6 +19,13 @@ const AccountInfo = () => {
     // TODO: Điều hướng đến trang chỉnh sửa thông tin
     navigate("/edit-profile");
     // navigate('/edit-profile'); // Ví dụ
+  };
+
+  const handleChangePasswordClick = () => {
+    // Điều hướng đến trang xác thực OTP, truyền SĐT qua state
+    navigate("/verify-otp", {
+      state: { phoneNumber: userInfo.phone, from: "change-password" },
+    });
   };
 
   return (
@@ -50,6 +57,20 @@ const AccountInfo = () => {
             { label: "Họ và tên", value: userInfo.name },
             { label: "Ngày sinh", value: userInfo.dob },
             { label: "Số điện thoại", value: userInfo.phone },
+            // <<< THÊM PHẦN MẬT KHẨU >>>
+            {
+              label: "Mật khẩu",
+              value: "********", // Luôn hiển thị dạng ẩn
+              actionButton: (
+                <button
+                  onClick={handleChangePasswordClick}
+                  className="text-orange-500 text-sm font-medium hover:underline ml-auto"
+                >
+                  Đổi mật khẩu
+                </button>
+              ),
+            },
+            // <<< KẾT THÚC PHẦN MẬT KHẨU >>>
             { label: "Địa chỉ", value: userInfo.address },
             { label: "Giới tính", value: userInfo.gender },
           ].map((field) => (
@@ -58,7 +79,15 @@ const AccountInfo = () => {
                 {field.label}
               </p>
               <div className="bg-gray-100 rounded-lg p-3 text-gray-800">
-                {field.value}
+                {/* <<< Hiển thị giá trị hoặc nút hành động >>> */}
+                {field.actionButton ? (
+                  <div className="flex items-center justify-between">
+                    <span>{field.value}</span>
+                    {field.actionButton}
+                  </div>
+                ) : (
+                  field.value
+                )}
               </div>
             </div>
           ))}

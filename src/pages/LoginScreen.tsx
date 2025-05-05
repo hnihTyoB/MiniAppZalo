@@ -1,11 +1,16 @@
 // src/pages/LoginScreen.tsx
-import React, { useState } from "react";
+import React, { useState, FormEvent } from "react"; // <<< Thêm FormEvent
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { loginApi } from "../api/auth"; // <<< Corrected the path to src/api/auth.ts
+import { Loader2 } from "lucide-react"; // <<< THAY THẾ: Import Loader2 thay vì Spinner
 
-const LoginScreen = () => {
+const LoginScreen: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState(""); // Thêm state cho số điện thoại
   const [password, setPassword] = useState(""); // Thêm state cho mật khẩu
+  const [error, setError] = useState<string | null>(null); // <<< Thêm state cho lỗi
+  const [loading, setLoading] = useState(false); // <<< Thêm state cho loading
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
@@ -26,23 +31,51 @@ const LoginScreen = () => {
   };
 
   // --- Hàm xử lý đăng nhập ---
-  const handleLogin = () => {
-    // --- BẮT ĐẦU PHẦN GIẢ LẬP XÁC THỰC ---
-    // Trong ứng dụng thực tế, bạn sẽ gọi API ở đây để kiểm tra phoneNumber và password
-    console.log("Đăng nhập với:", { phoneNumber, password });
-    // Giả sử đăng nhập thành công
-    const isLoggedIn = true; // Thay bằng logic kiểm tra thực tế
-    // --- KẾT THÚC PHẦN GIẢ LẬP XÁC THỰC ---
+  const { login } = useAuth(); // <<< Lấy hàm login từ context
 
-    if (isLoggedIn) {
-      // Nếu đăng nhập thành công, chuyển đến trang Home
-      navigate("/home"); // Điều hướng đến trang Home
-    } else {
-      // Xử lý khi đăng nhập thất bại (ví dụ: hiển thị thông báo lỗi)
-      alert("Số điện thoại hoặc mật khẩu không đúng!");
+  const handleLogin = async (event: FormEvent) => {
+    event.preventDefault(); // <<< Ngăn form submit mặc định
+    setError(null); // Xóa lỗi cũ
+    setLoading(true); // Bắt đầu loading
+
+    try {
+      // Gọi API backend để xác thực
+      // Giả sử API trả về { user: User, token?: string }
+      // và ném lỗi nếu thất bại
+      const response = await loginApi({ phone: phoneNumber, password }); // <<< Gọi API thật
+
+      if (response && response.user) {
+        // <<< Gọi hàm login từ context để cập nhật state và localStorage
+        login(
+          { ...response.user, branchId: response.user.branchId || "" },
+          response.token
+        );
+
+        // <<< Điều hướng sau khi đăng nhập thành công
+        // <<< SỬA LẠI: Kiểm tra cả admin và branch_manager >>>
+        if (
+          response.user.role === "admin" ||
+          response.user.role === "branch_manager"
+        ) {
+          navigate("/admin/dashboard", { replace: true }); // Chuyển đến trang admin
+        } else if (response.user.role === "customer") {
+          // <<< Thêm kiểm tra customer >>>
+          navigate("/home", { replace: true }); // Chuyển đến trang chủ user
+        } else {
+          navigate("/", { replace: true }); // <<< Chuyển về trang mặc định nếu role không xác định >>>
+        }
+      } else {
+        // Trường hợp API thành công nhưng không trả về user (ít xảy ra)
+        setError("Thông tin đăng nhập không hợp lệ.");
+      }
+    } catch (err: any) {
+      // Xử lý lỗi từ API
+      setError(err.message || "Số điện thoại hoặc mật khẩu không đúng.");
+      console.error("Login failed:", err);
+    } finally {
+      setLoading(false); // Kết thúc loading dù thành công hay thất bại
     }
   };
-  // --- Kết thúc hàm xử lý đăng nhập ---
 
   return (
     <div className="relative flex flex-col h-full">
@@ -54,7 +87,7 @@ const LoginScreen = () => {
         <span className="text-lg font-medium">Quay lại</span>
       </button>
 
-      <div className="bg-gray-200 flex items-center justify-center h-[50%]">
+      <div className="bg-gray-200 flex items-center justify-center h-[40%]">
         <img
           src="/images/bg_app.png"
           alt="Ảnh"
@@ -62,44 +95,55 @@ const LoginScreen = () => {
         />
       </div>
 
-      <div className="bg-white flex-1 rounded-t-3xl p-4 overflow-y-auto">
+      {/* <<< Bọc nội dung form bằng thẻ <form> và thêm onSubmit >>> */}
+      <form
+        onSubmit={handleLogin}
+        className="bg-white flex-1 rounded-t-3xl p-6 overflow-y-auto space-y-5" // <<< Tăng padding và space
+      >
         <h1 className="text-3xl font-bold mb-4 text-center">Đăng nhập</h1>
         {/* Cập nhật input số điện thoại */}
         <input
           type="tel" // Nên dùng type="tel" cho số điện thoại
           placeholder="Số điện thoại"
           value={phoneNumber} // Liên kết với state
-          onChange={(e) => setPhoneNumber(e.target.value)} // Cập nhật state khi thay đổi
-          className="border-b w-full p-2 mb-4 outline-none focus:border-orange-400" // Thêm focus style
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          required // <<< Thêm required
+          className="border-b w-full p-2 outline-none focus:border-orange-400"
         />
         {/* Cập nhật input mật khẩu */}
-        <div className="relative mb-4">
+        <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Mật khẩu"
             value={password} // Liên kết với state
-            onChange={(e) => setPassword(e.target.value)} // Cập nhật state khi thay đổi
-            className="border-b w-full p-2 pr-20 outline-none focus:border-orange-400" // Thêm focus style
+            onChange={(e) => setPassword(e.target.value)}
+            required // <<< Thêm required
+            className="border-b w-full p-2 pr-16 outline-none focus:border-orange-400" // <<< Điều chỉnh pr
           />
           <button
             type="button"
             onClick={togglePasswordVisibility}
-            className="absolute right-2 top-2 text-sm text-gray-500 hover:text-gray-700"
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 hover:text-gray-700" // <<< Căn giữa nút Hiện/Ẩn
           >
             {showPassword ? "Ẩn" : "Hiện"}
           </button>
         </div>
 
-        <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
+        {/* <<< Hiển thị lỗi nếu có >>> */}
+        {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+        <div className="flex justify-between items-center text-sm">
           <button
-            onClick={handleNavigateToRegister}
-            className="hover:underline font-bold text-orange-500"
+            type="button" // <<< Thêm type="button" để không submit form
+            onClick={handleNavigateToRegister} // Giữ nguyên
+            className="text-orange-500 hover:underline font-medium" // <<< Style lại
           >
             Đăng ký
           </button>
           <button
-            onClick={handleNavigateToForgotPassword}
-            className="hover:underline font-bold"
+            type="button" // <<< Thêm type="button"
+            onClick={handleNavigateToForgotPassword} // Giữ nguyên
+            className="text-gray-500 hover:underline font-medium" // <<< Style lại
           >
             Quên mật khẩu?
           </button>
@@ -107,12 +151,17 @@ const LoginScreen = () => {
 
         {/* Cập nhật nút Đăng nhập */}
         <button
-          onClick={handleLogin} // Gắn hàm xử lý đăng nhập vào sự kiện onClick
-          className="bg-orange-400 hover:bg-orange-500 text-white py-3 w-full rounded"
+          type="submit" // <<< Đổi thành type="submit"
+          disabled={loading} // <<< Disable nút khi đang loading
+          className="bg-orange-400 hover:bg-orange-500 text-white py-3 w-full rounded-lg text-lg font-semibold mt-4 disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center" // <<< Style lại và thêm disable style, flex
         >
-          Đăng nhập
+          {loading ? (
+            <Loader2 className="h-5 w-5 animate-spin" /> // <<< THAY THẾ: Sử dụng Loader2 với animate-spin
+          ) : (
+            "Đăng nhập"
+          )}
         </button>
-        <div className="text-center my-4 text-sm text-gray-400">
+        <div className="text-center text-sm text-gray-400 pt-2">
           hoặc đăng nhập với
         </div>
         <div className="flex justify-center gap-4">
@@ -131,7 +180,7 @@ const LoginScreen = () => {
             />
           </button>
         </div>
-      </div>
+      </form>
     </div>
   );
 };
