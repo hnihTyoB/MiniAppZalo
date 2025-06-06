@@ -1,14 +1,13 @@
-// src/pages/Home.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/pagination";
+import { openOAChat } from "@/utils/zalo";
 import {
   Bell,
   Search,
-  SlidersHorizontal,
   MapPin,
   Wrench,
   Square,
@@ -19,106 +18,203 @@ import {
   CalendarDays,
   MessageCircle,
   User,
-  // Building, // <<< Không cần nữa nếu hiển thị list
+  Phone,
+  Settings,
+  Paintbrush,
+  SprayCan,
 } from "lucide-react";
+import { Modal, Button } from "zmp-ui";
+import axios, { AxiosError } from "axios";
+import { API_BASE_URL } from "../config/api";
 
 // --- Interfaces ---
 interface ServiceItem {
-  icon: React.ElementType;
-  label: string;
+  id: number;
+  name: string;
+  icon?: React.ElementType;
 }
 interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  action?: () => void;
 }
 interface Branch {
   id: number;
   name: string;
-  imageUrl?: string;
   address?: string;
+  phone_number?: string;
+  image_url?: string;
+  description?: string; // Thêm description vào interface
+}
+interface Promotion {
+  id: number;
+  code: string;
+  description: string;
+  discount_value: number;
+  discount_type: "percentage" | "fixed";
+  service_id: number;
+  start_date: string;
+  end_date: string;
 }
 
-// --- Mảng dữ liệu tĩnh ---
-const services: ServiceItem[] = [
-  { icon: Wrench, label: "Sửa xe" },
-  { icon: Square, label: "Thay kính" },
-  { icon: Droplet, label: "Thay dầu" },
-  { icon: ShowerHead, label: "Rửa xe" },
-];
 const navItems: NavItem[] = [
   { icon: HomeIcon, label: "Home", path: "/home" },
   { icon: CalendarDays, label: "Bookings", path: "/bookings" },
-  { icon: MessageCircle, label: "Chat", path: "/chat" },
+  { icon: MessageCircle, label: "Chat", path: "/chat", action: openOAChat },
   { icon: User, label: "Profile", path: "/profile" },
 ];
-const availableBranches: Branch[] = [
-  {
-    id: 1,
-    name: "PTIT - Chi nhánh 1",
-    address: "97 Man Thiện, Thủ Đức",
-    imageUrl: "/images/branch-1.jpg", // <<< Đảm bảo đường dẫn ảnh đúng
-  },
-  {
-    id: 2,
-    name: "PTIT - Chi nhánh 2",
-    address: "122 Hoàng Diệu 2, Thủ Đức",
-    imageUrl: "/images/branch-2.jpg", // <<< Đảm bảo đường dẫn ảnh đúng
-  },
-  { id: 3, name: "Chi nhánh Quận 9", address: "45 Lê Văn Việt, Quận 9" },
-  // Thêm chi nhánh khác nếu cần
-];
-const normalizeServiceName = (name: string): string => {
-  return (
-    name
-      .toLowerCase()
-      // Bỏ dấu tiếng Việt
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      // Thay khoảng trắng bằng gạch nối
-      .replace(/\s+/g, "-")
-  );
-};
 
 const Home = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  // <<< XÓA: State selectedBranch không cần thiết cho kiểu hiển thị này >>>
-  // const [selectedBranch, setSelectedBranch] = useState<Branch | null>(
-  //   availableBranches[0] || null
-  // );
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [promotions, setPromotions] = useState<Promotion[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showAllServices, setShowAllServices] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // --- Handlers ---
+  const serviceIcons: { [key: string]: React.ElementType } = {
+    "Sửa xe": Wrench,
+    "Thay kính": Square,
+    "Thay dầu": Droplet,
+    "Rửa xe": ShowerHead,
+    "Bảo dưỡng": Settings,
+    "Kiểm tra tổng quát": Search,
+    "Sơn xe": Paintbrush,
+    "Vệ sinh nội thất": SprayCan,
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [servicesResponse, branchesResponse, promotionsResponse] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/services`, { headers }).catch((err) => {
+            console.error("Error fetching services:", err);
+            return { data: [] };
+          }),
+          axios.get(`${API_BASE_URL}/api/branches`, { headers }).catch((err) => {
+            console.error("Error fetching branches:", err);
+            return { data: [] };
+          }),
+          axios.get(`${API_BASE_URL}/api/promotions`, { headers }).catch((err) => {
+            console.error("Error fetching promotions:", err);
+            return { data: [] };
+          }),
+        ]);
+
+        const fetchedServices = servicesResponse.data.map((service: any) => ({
+          id: service.id,
+          name: service.name,
+          icon: serviceIcons[service.name] || Wrench,
+        }));
+        setServices(fetchedServices);
+
+        setBranches(branchesResponse.data);
+
+        const validPromotions = Array.isArray(promotionsResponse.data)
+          ? promotionsResponse.data.filter(
+              (promo: Promotion) =>
+                promo.description != null &&
+                promo.discount_value != null &&
+                promo.discount_type != null
+            )
+          : [];
+        console.log("Valid Promotions:", validPromotions);
+        setPromotions(validPromotions);
+
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+        const error = err as AxiosError<{ message?: string }>;
+        if (error.response) {
+          const status = error.response.status;
+          if (status === 401 || status === 403) {
+            localStorage.removeItem("token");
+            navigate("/login");
+            setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          } else {
+            setError(error.response.data?.message || "Đã có lỗi xảy ra khi lấy dữ liệu.");
+          }
+        } else {
+          setError("Không thể kết nối đến server. Vui lòng kiểm tra lại kết nối.");
+        }
+      }
+    };
+
+    fetchData();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (error) {
+      setIsModalOpen(true);
+    }
+  }, [error]);
+
   const handleViewAll = (section: string) => {
-    console.log(`Xem tất cả ${section}`);
     if (section === "Chi nhánh") {
-      navigate("/branches"); // <<< ĐIỀU HƯỚNG ĐẾN TRANG DANH SÁCH CHI NHÁNH >>>
+      navigate("/branches");
     } else if (section === "Khuyến mãi") {
-      // navigate('/promotions'); // Ví dụ điều hướng khác
+      navigate("/promotions");
     } else if (section === "Dịch vụ") {
-      // navigate('/services'); // Ví dụ điều hướng khác
+      navigate("/services");
     }
   };
-  const handleServiceClick = (serviceLabel: string) => {
-    const serviceId = normalizeServiceName(serviceLabel); // Chuẩn hóa tên thành ID
-    console.log(`Navigating to service detail: ${serviceId}`);
-    navigate(`/service/${serviceId}`); // Điều hướng đến trang chi tiết
+
+  const handleServiceClick = (serviceId: number) => {
+    navigate(`/service/${serviceId}`);
   };
 
-  // <<< SỬA: Handler khi click vào một chi nhánh >>>
   const handleBranchClick = (branch: Branch) => {
-    console.log(`Clicked on branch: ${branch.name}`);
-    // Điều hướng đến trang chi tiết và truyền ID (hoặc toàn bộ object) qua state
     navigate("/branch-detail", { state: { branchData: branch } });
-    // Lưu ý: Trang BranchDetail.tsx hiện tại chưa sử dụng state này,
-    // bạn cần cập nhật BranchDetail.tsx để lấy và hiển thị dữ liệu từ state.
   };
 
-  // <<< XÓA: Các handler handleSelectBranch và handleChooseOrChangeBranch không cần nữa >>>
+  const handlePromotionClick = (promotionId: number) => {
+    navigate(`/promotion/${promotionId}`);
+  };
+
+  const toggleShowAllServices = () => {
+    setShowAllServices(!showAllServices);
+  };
+
+  const servicesToDisplay = showAllServices ? services : services.slice(0, 4);
 
   const currentPath = window.location.pathname;
 
-  // --- CSS Swiper (giữ nguyên) ---
+  const slideColors = [
+    {
+      background: "#FFDBD5",
+      tagText: "#D94A3D",
+      discountText: "#F2695C",
+      button: "#FF8A80",
+      buttonHover: "#F2695C",
+    },
+    {
+      background: "#D4F4E2",
+      tagText: "#2E8B57",
+      discountText: "#3CB371",
+      button: "#66CDAA",
+      buttonHover: "#3CB371",
+    },
+    {
+      background: "#E6E1FF",
+      tagText: "#6A5ACD",
+      discountText: "#7B68EE",
+      button: "#B0A8FF",
+      buttonHover: "#7B68EE",
+    },
+  ];
+
   const swiperPaginationStyle = `
     .swiper-pagination-bullet { background-color: #9ca3af; opacity: 0.5; }
     .swiper-pagination-bullet-active { background-color: #f97316; opacity: 1; }
@@ -126,40 +222,38 @@ const Home = () => {
   `;
 
   return (
-    <div className="flex flex-col h-screen bg-white pb-20 overflow-y-auto">
+    <div className="flex flex-col h-screen bg-white pb-20 overflow-y-auto mt-3">
       <style>{swiperPaginationStyle}</style>
+      {/* Header */}
+      <div className="sticky top-0 bg-white z-10 px-4 pt-4 pb-3 border-b">
+        <div className="relative flex justify-center items-center mb-4">
+          <h1 className="text-2xl font-bold text-orange-500">
+            G2 Schedule a car repair
+          </h1>
+        </div>
+        {/* Search Bar */}
+        <div className="sticky top-[56px] bg-white z-10 py-2">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center px-3 py-2 bg-gray-100 rounded-lg flex-1">
+              <Search className="w-5 h-5 text-gray-500 mr-2 flex-shrink-0" />
+              <input
+                className="bg-transparent outline-none w-full text-sm"
+                placeholder="Tìm kiếm dịch vụ, chi nhánh..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <button
+              onClick={() => navigate("/notifications")}
+              className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg flex-shrink-0"
+            >
+              <Bell className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+      </div>
 
       <div className="p-4 flex-grow">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-4">
-          <div>
-            <div className="text-sm text-gray-500">Địa điểm</div>
-            <div className="text-base font-semibold flex items-center gap-1">
-              <MapPin className="w-4 h-4 text-orange-500" />
-              TP. Hồ Chí Minh, Việt Nam
-            </div>
-          </div>
-          <button onClick={() => navigate("/notifications")} className="p-1">
-            <Bell className="w-6 h-6 text-orange-500 hover:text-orange-600" />
-          </button>
-        </div>
-
-        {/* Search and Filter */}
-        <div className="flex items-center gap-2 mb-4">
-          <div className="flex items-center px-3 py-2 bg-gray-100 rounded-lg flex-1">
-            <Search className="w-5 h-5 text-gray-500 mr-2 flex-shrink-0" />
-            <input
-              className="bg-transparent outline-none w-full text-sm"
-              placeholder="Tìm kiếm dịch vụ, chi nhánh..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <button className="p-2 bg-orange-400 hover:bg-orange-500 text-white rounded-lg">
-            <SlidersHorizontal className="w-5 h-5" />
-          </button>
-        </div>
-
         {/* Khuyến mãi */}
         <div className="mb-6 relative">
           <div className="flex justify-between items-center mb-3">
@@ -171,66 +265,68 @@ const Home = () => {
               Xem tất cả
             </button>
           </div>
-          <Swiper
-            modules={[Autoplay, Pagination]}
-            slidesPerView={1}
-            autoplay={{ delay: 3000, disableOnInteraction: false }}
-            loop
-            pagination={{ clickable: true }}
-            className="rounded-xl overflow-hidden pb-8"
-          >
-            {/* Slides khuyến mãi giữ nguyên */}
-            <SwiperSlide>
-              <div className="bg-orange-100 p-4 rounded-xl relative aspect-[2/1] flex flex-col justify-between">
-                <div>
-                  <span className="text-xs bg-white px-2 py-1 rounded-full font-medium text-orange-600">
-                    Khuyến mãi hôm nay
-                  </span>
-                  <h3 className="text-lg font-bold mt-2 text-gray-800">
-                    Nhận khuyến mãi đặc biệt
-                  </h3>
-                  <p className="text-2xl font-bold text-orange-500">
-                    Lên đến 20%
-                  </p>
-                </div>
-                <button className="mt-2 bg-orange-400 hover:bg-orange-500 text-white px-4 py-1.5 rounded-lg self-start text-sm">
-                  Nhận ngay
-                </button>
-              </div>
-            </SwiperSlide>
-            <SwiperSlide>
-              <div className="bg-blue-100 p-4 rounded-xl relative aspect-[2/1] flex flex-col justify-between">
-                <div>
-                  <span className="text-xs bg-white px-2 py-1 rounded-full font-medium text-blue-600">
-                    Ưu đãi thành viên
-                  </span>
-                  <h3 className="text-lg font-bold mt-2 text-gray-800">
-                    Giảm giá rửa xe cuối tuần
-                  </h3>
-                  <p className="text-2xl font-bold text-blue-500">Chỉ 50K</p>
-                </div>
-                <button className="mt-2 bg-blue-400 hover:bg-blue-500 text-white px-4 py-1.5 rounded-lg self-start text-sm">
-                  Xem chi tiết
-                </button>
-              </div>
-            </SwiperSlide>
-            <SwiperSlide>
-              <div className="bg-green-100 p-4 rounded-xl relative aspect-[2/1] flex flex-col justify-between">
-                <div>
-                  <span className="text-xs bg-white px-2 py-1 rounded-full font-medium text-green-600">
-                    Chào hè sang
-                  </span>
-                  <h3 className="text-lg font-bold mt-2 text-gray-800">
-                    Kiểm tra điều hòa miễn phí
-                  </h3>
-                  <p className="text-2xl font-bold text-green-500">0đ</p>
-                </div>
-                <button className="mt-2 bg-green-400 hover:bg-green-500 text-white px-4 py-1.5 rounded-lg self-start text-sm">
-                  Đặt lịch
-                </button>
-              </div>
-            </SwiperSlide>
-          </Swiper>
+          {loading ? (
+            <p className="text-center text-gray-500">Đang tải khuyến mãi...</p>
+          ) : promotions.length === 0 ? (
+            <p className="text-center text-gray-500">Chưa có khuyến mãi nào.</p>
+          ) : (
+            <Swiper
+              modules={[Autoplay, Pagination]}
+              slidesPerView={1}
+              autoplay={{ delay: 3000, disableOnInteraction: false }}
+              loop
+              pagination={{ clickable: true }}
+              className="rounded-xl overflow-hidden pb-8"
+            >
+              {promotions.map((promotion, index) => {
+                const color = slideColors[index % slideColors.length];
+                const discountText =
+                  promotion.discount_type === "percentage"
+                    ? `${promotion.discount_value}%`
+                    : `${promotion.discount_value.toLocaleString()}đ`;
+
+                return (
+                  <SwiperSlide key={promotion.id}>
+                    <div
+                      style={{ backgroundColor: color.background }}
+                      className="p-4 rounded-xl relative aspect-[2/1] flex flex-col justify-between cursor-pointer"
+                      onClick={() => handlePromotionClick(promotion.id)}
+                    >
+                      <div>
+                        <span
+                          style={{ color: color.tagText, backgroundColor: "#FFFFFF" }}
+                          className="text-xs px-2 py-1 rounded-full font-medium"
+                        >
+                          {promotion.code}
+                        </span>
+                        <h3 className="text-lg font-bold mt-2 text-gray-800">
+                          {promotion.description}
+                        </h3>
+                        <p
+                          style={{ color: color.discountText }}
+                          className="text-2xl font-bold"
+                        >
+                          {discountText}
+                        </p>
+                      </div>
+                      <button
+                        style={{ backgroundColor: color.button }}
+                        className="mt-2 text-white px-4 py-1.5 rounded-lg self-start text-sm hover:bg-[var(--buttonHover)]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePromotionClick(promotion.id);
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = color.buttonHover)}
+                        onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = color.button)}
+                      >
+                        Nhận ngay
+                      </button>
+                    </div>
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
+          )}
         </div>
 
         {/* Dịch vụ */}
@@ -238,40 +334,45 @@ const Home = () => {
           <div className="flex justify-between items-center mb-3">
             <h2 className="font-bold text-lg">Dịch vụ</h2>
             <button
-              onClick={() => handleViewAll("Dịch vụ")}
+              onClick={toggleShowAllServices}
               className="text-orange-400 text-sm font-medium hover:underline cursor-pointer"
             >
-              Xem tất cả
+              {showAllServices ? "Ẩn bớt" : "Xem tất cả"}
             </button>
           </div>
-          <div className="grid grid-cols-4 gap-4 text-center text-xs sm:text-sm text-gray-600">
-            {services.map((service, index) => (
-              <div
-                key={index}
-                onClick={() => handleServiceClick(service.label)}
-                className="flex flex-col items-center gap-1.5 cursor-pointer group"
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    handleServiceClick(service.label);
-                  }
-                }}
-              >
-                <div className="bg-gray-100 group-hover:bg-orange-100 p-3 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-200">
-                  <service.icon className="w-6 h-6 text-orange-500" />
+          {loading ? (
+            <p className="text-center text-gray-500">Đang tải dịch vụ...</p>
+          ) : services.length === 0 ? (
+            <p className="text-center text-gray-500">Chưa có dịch vụ nào.</p>
+          ) : (
+            <div className="grid grid-cols-4 gap-4 text-center text-xs sm:text-sm text-gray-600">
+              {servicesToDisplay.map((service) => (
+                <div
+                  key={service.id}
+                  onClick={() => handleServiceClick(service.id)}
+                  className="flex flex-col items-center gap-1.5 cursor-pointer group"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleServiceClick(service.id);
+                    }
+                  }}
+                >
+                  <div className="bg-gray-100 group-hover:bg-orange-100 p-3 rounded-full w-12 h-12 flex items-center justify-center transition-colors duration-200">
+                    {service.icon && <service.icon className="w-6 h-6 text-orange-500" />}
+                  </div>
+                  <span className="font-medium">{service.name}</span>
                 </div>
-                <span className="font-medium">{service.label}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/*CHI NHÁNH*/}
+        {/* Chi nhánh */}
         <div className="mb-6">
           <div className="flex justify-between items-center mb-3">
             <h2 className="font-bold text-lg">Chi nhánh</h2>
-            {/* Nút này giờ sẽ điều hướng đúng */}
             <button
               onClick={() => handleViewAll("Chi nhánh")}
               className="text-orange-400 text-sm font-medium hover:underline cursor-pointer"
@@ -279,54 +380,64 @@ const Home = () => {
               Xem tất cả
             </button>
           </div>
-          {/* Hiển thị danh sách các chi nhánh (giữ nguyên) */}
-          <div className="space-y-4">
-            {availableBranches.slice(0, 3).map((branch) => (
-              <div
-                key={branch.id}
-                onClick={() => handleBranchClick(branch)}
-                className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200"
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    handleBranchClick(branch);
-                  }
-                }}
-              >
-                {/* ... (code hiển thị ảnh và text chi nhánh giữ nguyên) ... */}
-                {branch.imageUrl ? (
+          {loading ? (
+            <p className="text-center text-gray-500">Đang tải chi nhánh...</p>
+          ) : branches.length === 0 ? (
+            <p className="text-center text-gray-500">Chưa có chi nhánh nào.</p>
+          ) : (
+            <div className="space-y-4">
+              {branches.slice(0, 3).map((branch) => (
+                <div
+                  key={branch.id}
+                  onClick={() => handleBranchClick(branch)}
+                  className="border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm cursor-pointer hover:shadow-md transition-shadow duration-200"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      handleBranchClick(branch);
+                    }
+                  }}
+                >
                   <div className="w-full aspect-video bg-gray-100">
-                    <img
-                      src={branch.imageUrl}
-                      alt={branch.name}
-                      className="w-full h-full object-cover"
-                    />
+                    {branch.image_url ? (
+                      <img
+                        src={branch.image_url}
+                        alt={branch.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <ImageIcon className="w-12 h-12 text-gray-400" />
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="w-full aspect-video bg-gray-100 flex items-center justify-center">
-                    <ImageIcon className="w-12 h-12 text-gray-400" />
-                  </div>
-                )}
-                <div className="p-3">
-                  <div className="font-semibold text-base truncate mb-0.5">
-                    {branch.name}
-                  </div>
-                  {branch.address && (
-                    <div className="text-sm text-gray-500 flex items-center gap-1">
-                      <MapPin size={14} className="flex-shrink-0" />
-                      <span className="truncate">{branch.address}</span>
+                  <div className="p-3">
+                    <div className="font-semibold text-base truncate mb-1">
+                      {branch.name}
                     </div>
-                  )}
+                    {branch.description && (
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-1">
+                        {branch.description}
+                      </p>
+                    )}
+                    {branch.address && (
+                      <div className="text-sm text-gray-500 flex items-center gap-1 mb-1">
+                        <MapPin size={14} className="flex-shrink-0" />
+                        <span className="truncate">{branch.address}</span>
+                      </div>
+                    )}
+                    {branch.phone_number && (
+                      <div className="text-sm text-gray-500 flex items-center gap-1">
+                        <Phone size={14} className="flex-shrink-0" />
+                        <span className="truncate">{branch.phone_number}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {availableBranches.length === 0 && (
-              <p className="text-center text-gray-500 mt-4">
-                Chưa có chi nhánh nào.
-              </p>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -335,7 +446,13 @@ const Home = () => {
         {navItems.map((item, index) => (
           <button
             key={index}
-            onClick={() => navigate(item.path)}
+            onClick={() => {
+              if (item.action) {
+                item.action();
+              } else {
+                navigate(item.path);
+              }
+            }}
             className={`flex flex-col items-center gap-0.5 ${
               currentPath === item.path ? "text-orange-500" : "text-gray-500"
             } hover:text-orange-400 transition-colors duration-200`}
@@ -349,6 +466,27 @@ const Home = () => {
           </button>
         ))}
       </div>
+
+      {/* Modal để hiển thị lỗi */}
+      <Modal
+        visible={isModalOpen}
+        title="Lỗi"
+        onClose={() => {
+          setIsModalOpen(false);
+          setError(null);
+        }}
+        description={error || "Đã có lỗi xảy ra."}
+      >
+        <Button
+          variant="primary"
+          onClick={() => {
+            setIsModalOpen(false);
+            setError(null);
+          }}
+        >
+          OK
+        </Button>
+      </Modal>
     </div>
   );
 };

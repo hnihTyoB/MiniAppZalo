@@ -6,7 +6,16 @@ export default () => {
   return defineConfig({
     root: "./src",
     base: "",
-    plugins: [react()],
+    plugins: [react(),
+      {
+        name:"override-config",
+        config: () => ({
+            build:{
+               target:"esnext",
+            }
+        }),
+      }
+    ],
     resolve: {
       alias: {
         "@": "/src",

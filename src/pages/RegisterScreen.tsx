@@ -1,61 +1,111 @@
-// src/pages/RegisterScreen.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import axios, { AxiosError } from "axios";
+import { API_BASE_URL } from "../config/api";
+import { Modal, Button } from "zmp-ui";
 
 const RegisterScreen = () => {
-  // ... (state declarations remain the same) ...
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => {
+        navigate("/login");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage, navigate]);
+
+  useEffect(() => {
+    if (error) {
+      setIsModalOpen(true);
+    }
+  }, [error]);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleRegister = () => {
-    if (password !== confirmPassword) {
-      alert("Mật khẩu nhập lại không khớp!");
-      return;
+  const handleRegister = async (): Promise<void> => {
+    try {
+      setError(null);
+
+      const phoneRegex = /^0[0-9]{9}$/;
+      if (!phoneRegex.test(phoneNumber)) {
+        setError("Số điện thoại phải bắt đầu bằng 0, có đúng 10 chữ số và không chứa ký tự đặc biệt hoặc chữ cái!");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setError("Mật khẩu nhập lại không khớp!");
+        return;
+      }
+
+      const response = await axios.post(`${API_BASE_URL}/api/register`, {
+        full_name: fullName,
+        phone_number: phoneNumber,
+        email: email,
+        password: password,
+      });
+
+      if (response.status === 201) {
+        console.log("Đăng ký thành công:", response.data);
+        setSuccessMessage("Đăng ký thành công! Mời bạn đăng nhập...");
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      if (error.response) {
+        const message = error.response.data?.message || "Đã có lỗi xảy ra";
+        setError(message);
+      } else {
+        setError("Không thể kết nối đến server. Vui lòng kiểm tra lại kết nối.");
+      }
     }
-    console.log("Đăng ký với:", { fullName, phoneNumber, password });
-    // navigate('/some-other-page');
   };
 
   const goBack = () => {
-    navigate(-1); // Quay lại trang trước đó
+    navigate(-1);
   };
 
   return (
-    // 2. Thêm 'relative'
     <div className="relative flex flex-col h-full">
-      {/* 3. Thêm nút Quay lại */}
       <button
         onClick={goBack}
-        className="absolute top-7 left-4 z-10 flex items-center gap-2 text-base text-white hover:text-gray-200 px-3 py-2 rounded" // Styling cho nút
+        className="absolute top-7 left-4 z-10 flex items-center gap-2 text-base text-white hover:text-gray-200 px-3 py-2 rounded"
       >
-        <ChevronLeft size={25} /> {/* Icon lớn hơn */}
-        <span className="text-lg font-medium">Quay lại</span>{" "}
-        {/* Chữ lớn hơn */}
+        <ChevronLeft size={25} />
+        <span className="text-lg font-medium " style={{ color: "GrayText" }}>
+          Quay lại
+        </span>
       </button>
 
-      {/* Phần ảnh */}
       <div className="bg-gray-200 flex items-center justify-center h-[28%]">
         <img
-          src="/images/taoanhdep_ghibli_15139.jpeg"
+          src="/images/bg_start.jpg"
+          style={{ backgroundSize: "contain", backgroundRepeat: "no-repeat" }}
           alt="Ảnh nền đăng ký"
           className="h-full w-full object-cover"
         />
       </div>
 
-      {/* Phần form đăng ký */}
       <div className="bg-white flex-1 rounded-t-3xl p-6 overflow-y-auto space-y-5">
-        {/* ... (rest of the form code remains the same) ... */}
         <h1 className="text-3xl font-bold mb-4 text-center">Đăng ký</h1>
+
+        {successMessage && (
+          <div className="text-green-500 text-center mb-4">{successMessage}</div>
+        )}
+
         <input
           type="text"
           placeholder="Họ và tên"
@@ -68,6 +118,13 @@ const RegisterScreen = () => {
           placeholder="Số điện thoại"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
+          className="border-b w-full p-2 outline-none focus:border-orange-400"
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           className="border-b w-full p-2 outline-none focus:border-orange-400"
         />
         <div className="relative">
@@ -126,6 +183,26 @@ const RegisterScreen = () => {
           </button>
         </div>
       </div>
+
+      <Modal
+        visible={isModalOpen}
+        title="Lỗi"
+        onClose={() => {
+          setIsModalOpen(false);
+          setError(null);
+        }}
+        description={error || "Đã có lỗi xảy ra."}
+      >
+        <Button
+          variant="primary"
+          onClick={() => {
+            setIsModalOpen(false);
+            setError(null);
+          }}
+        >
+          OK
+        </Button>
+      </Modal>
     </div>
   );
 };

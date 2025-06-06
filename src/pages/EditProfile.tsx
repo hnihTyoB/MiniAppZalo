@@ -1,79 +1,135 @@
-// src/pages/EditProfile.tsx
-import React, { useState, useRef, ChangeEvent } from "react";
-import { ChevronLeft, User, Camera } from "lucide-react"; // Thêm Camera icon
+import React, { useState, useEffect } from "react";
+import { ChevronLeft, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Select } from "zmp-ui"; // Hoặc tên component tương ứng
+import { Select, Modal, Button } from "zmp-ui";
+import axios, { AxiosError } from "axios";
+import { API_BASE_URL } from "../config/api";
+
+interface UserInfo {
+  name: string;
+  dob: string | null;
+  phone: string;
+  address: string | null;
+  gender: string | null;
+}
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [name, setName] = useState("");
+  const [dob, setDob] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [gender, setGender] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // --- State cho thông tin người dùng (lấy từ props/context/API hoặc hardcode) ---
-  // TODO: Lấy thông tin người dùng hiện tại để khởi tạo state
-  const initialUserInfo = {
-    name: "Nguyễn Chí Thịnh",
-    dob: "2004-08-11", // Sử dụng định dạng YYYY-MM-DD cho input type="date"
-    phone: "1234509876",
-    address: "97 Man Thiện, Hiệp Phú, Thủ Đức, TP.HCM",
-    gender: "Nam",
-    avatarUrl: null as string | null, // Thêm avatarUrl
-  };
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          navigate("/login");
+          return;
+        }
 
-  const [name, setName] = useState(initialUserInfo.name);
-  const [dob, setDob] = useState(initialUserInfo.dob);
-  const [phone, setPhone] = useState(initialUserInfo.phone);
-  const [address, setAddress] = useState(initialUserInfo.address);
-  const [gender, setGender] = useState(initialUserInfo.gender);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(
-    initialUserInfo.avatarUrl
-  );
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+        const response = await axios.get(`${API_BASE_URL}/api/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-  // Ref cho input file ẩn
-  const fileInputRef = useRef<HTMLInputElement>(null);
+        const userData = response.data;
+        setUserInfo(userData);
+        setName(userData.name || "");
+        setDob(userData.dob || "");
+        setPhone(userData.phone || "");
+        setAddress(userData.address || "");
+        setGender(userData.gender || "");
+        setLoading(false);
+      } catch (err) {
+        setLoading(false);
+        const error = err as AxiosError<{ message?: string; error?: string }>;
+        if (error.response) {
+          const status = error.response.status;
+          if (status === 401 || status === 403) {
+            localStorage.removeItem("token");
+            navigate("/login");
+            setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          } else {
+            setError(
+              error.response.data?.message || error.response.data?.error || "Đã có lỗi xảy ra khi lấy thông tin."
+            );
+          }
+        } else {
+          setError("Không thể kết nối đến server. Vui lòng kiểm tra lại kết nối.");
+        }
+      }
+    };
 
-  // --- Xử lý thay đổi ảnh đại diện ---
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click(); // Kích hoạt input file khi nhấn vào avatar
-  };
+    fetchUserInfo();
+  }, [navigate]);
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setAvatarFile(file);
-      // Tạo URL tạm thời để xem trước ảnh
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  useEffect(() => {
+    if (error) {
+      setIsModalOpen(true);
     }
-  };
+  }, [error]);
+
   const handleGenderChange = (selectedValue: string | number) => {
-    // Chuyển đổi selectedValue thành string nếu cần
     setGender(String(selectedValue));
   };
 
-  // --- Xử lý lưu thay đổi ---
-  const handleSaveChanges = () => {
-    // TODO: Xử lý logic lưu thay đổi (gọi API)
-    const updatedInfo = {
-      name,
-      dob,
-      phone,
-      address,
-      gender,
-      // avatarFile // Gửi file này lên server nếu có thay đổi
-    };
-    console.log("Lưu thông tin:", updatedInfo);
-    if (avatarFile) {
-      console.log("Ảnh đại diện mới:", avatarFile.name);
-      // Thêm logic upload file ở đây
-    }
+  const handleSaveChanges = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
-    // Sau khi lưu thành công, quay lại trang thông tin
-    alert("Đã lưu thay đổi (Kiểm tra console log)");
-    navigate("/account"); // Hoặc navigate(-1) để quay lại trang trước
+      const updatedInfo = {
+        name,
+        dob,
+        address,
+        gender,
+      };
+
+      await axios.put(`${API_BASE_URL}/api/users/me`, updatedInfo, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      alert("Cập nhật thông tin thành công!");
+      navigate("/account");
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string; error?: string }>;
+      if (error.response) {
+        const status = error.response.status;
+        if (status === 401 || status === 403) {
+          localStorage.removeItem("token");
+          navigate("/login");
+          setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+        } else {
+          setError(
+            error.response.data?.message || error.response.data?.error || "Đã có lỗi xảy ra khi cập nhật thông tin."
+          );
+        }
+      } else {
+        setError("Không thể kết nối đến server. Vui lòng kiểm tra lại kết nối.");
+      }
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-white">
+        <p className="text-gray-500">Đang tải thông tin...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-white">
@@ -85,47 +141,18 @@ const EditProfile = () => {
         <h2 className="text-xl font-semibold text-center flex-1">
           Chỉnh sửa thông tin
         </h2>
-        <div className="w-8"></div> {/* Placeholder for balance */}
+        <div className="w-8"></div>
       </div>
 
-      {/* Phần nội dung chính: Thêm pb-20 */}
+      {/* Phần nội dung chính */}
       <div className="flex-grow overflow-y-auto p-6 pb-20">
-        {/* Avatar có thể chỉnh sửa */}
         <div className="flex justify-center mb-8">
-          <div className="relative w-24 h-24">
-            <div className="w-full h-full bg-gray-100 rounded-full flex items-center justify-center text-gray-400 overflow-hidden">
-              {avatarPreview ? (
-                <img
-                  src={avatarPreview}
-                  alt="Avatar Preview"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User size={48} />
-              )}
-            </div>
-            {/* Nút/Icon để thay đổi ảnh */}
-            <button
-              onClick={handleAvatarClick}
-              className="absolute bottom-0 right-0 bg-orange-400 hover:bg-orange-500 text-white p-1.5 rounded-full border-2 border-white"
-              aria-label="Thay đổi ảnh đại diện"
-            >
-              <Camera size={16} />
-            </button>
-            {/* Input file ẩn */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept="image/*" // Chỉ chấp nhận file ảnh
-              className="hidden"
-            />
+          <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
+            <User size={48} />
           </div>
         </div>
 
-        {/* Form chỉnh sửa thông tin */}
         <div className="space-y-4">
-          {/* Họ và tên */}
           <div>
             <label
               htmlFor="name"
@@ -141,7 +168,6 @@ const EditProfile = () => {
               className="w-full border border-gray-300 rounded-lg p-3 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none"
             />
           </div>
-          {/* Ngày sinh */}
           <div>
             <label
               htmlFor="dob"
@@ -151,13 +177,12 @@ const EditProfile = () => {
             </label>
             <input
               id="dob"
-              type="date" // Sử dụng input date
+              type="date"
               value={dob}
               onChange={(e) => setDob(e.target.value)}
               className="w-full border border-gray-300 rounded-lg p-3 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none"
             />
           </div>
-          {/* Số điện thoại */}
           <div>
             <label
               htmlFor="phone"
@@ -165,15 +190,10 @@ const EditProfile = () => {
             >
               Số điện thoại
             </label>
-            <input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg p-3 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none"
-            />
+            <div className="w-full bg-gray-100 rounded-lg p-3 text-gray-800">
+              {phone || "Chưa cập nhật"}
+            </div>
           </div>
-          {/* Địa chỉ */}
           <div>
             <label
               htmlFor="address"
@@ -181,7 +201,7 @@ const EditProfile = () => {
             >
               Địa chỉ
             </label>
-            <input // Hoặc dùng <textarea> nếu muốn nhập nhiều dòng
+            <input
               id="address"
               type="text"
               value={address}
@@ -189,7 +209,6 @@ const EditProfile = () => {
               className="w-full border border-gray-300 rounded-lg p-3 focus:border-orange-400 focus:ring-1 focus:ring-orange-400 outline-none"
             />
           </div>
-          {/* Giới tính */}
           <div>
             <label className="block text-sm text-gray-600 mb-1 font-bold">
               Giới tính
@@ -198,7 +217,6 @@ const EditProfile = () => {
               value={gender}
               onChange={handleGenderChange}
               placeholder="Chọn giới tính"
-              // <<< XÓA className khỏi đây >>>
             >
               <Select.Option value="Nam" title="Nam" />
               <Select.Option value="Nữ" title="Nữ" />
@@ -208,7 +226,6 @@ const EditProfile = () => {
         </div>
       </div>
 
-      {/* Nút Lưu thay đổi */}
       <div className="fixed bottom-0 left-0 w-full z-10">
         <button
           className="bg-orange-400 hover:bg-orange-500 text-white py-3 text-lg w-full"
@@ -217,6 +234,26 @@ const EditProfile = () => {
           Lưu thay đổi
         </button>
       </div>
+
+      <Modal
+        visible={isModalOpen}
+        title="Lỗi"
+        onClose={() => {
+          setIsModalOpen(false);
+          setError(null);
+        }}
+        description={error || "Đã có lỗi xảy ra."}
+      >
+        <Button
+          variant="primary"
+          onClick={() => {
+            setIsModalOpen(false);
+            setError(null);
+          }}
+        >
+          OK
+        </Button>
+      </Modal>
     </div>
   );
 };

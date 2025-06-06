@@ -1,13 +1,12 @@
-// src/pages/Notifications.tsx
-import React, { useState, useEffect } from "react"; // <<< THÊM useEffect
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Filter, Image as ImageIcon, ChevronLeft } from "lucide-react";
+import { Modal, Button as ZmpButton } from "zmp-ui"; // Thêm Modal và Button từ zmp-ui
 
-// --- interface ScheduleItem ---
 interface ScheduleItem {
   id: string;
   branch: string;
@@ -19,7 +18,6 @@ interface ScheduleItem {
   imageUrl?: string;
 }
 
-// --- Dữ liệu mẫu ban đầu ---
 const initialMockData: ScheduleItem[] = [
   {
     id: "#549493",
@@ -71,42 +69,46 @@ const initialMockData: ScheduleItem[] = [
 export default function Notifications() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  // <<< SỬA: Khởi tạo state với dữ liệu mẫu ban đầu >>>
   const [items, setItems] = useState<ScheduleItem[]>(initialMockData);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // <<< THÊM: useEffect để đọc và thêm lịch hẹn mới từ localStorage >>>
   useEffect(() => {
     try {
       const newlyAddedBookingsRaw = localStorage.getItem("newlyAddedBookings");
       if (newlyAddedBookingsRaw) {
-        const newlyAddedBookings: ScheduleItem[] = JSON.parse(
-          newlyAddedBookingsRaw
-        );
+        const newlyAddedBookings: ScheduleItem[] = JSON.parse(newlyAddedBookingsRaw);
         if (newlyAddedBookings.length > 0) {
-          // Thêm lịch hẹn mới vào đầu danh sách hiện tại
           setItems((prevItems) => [...newlyAddedBookings, ...prevItems]);
-          // Xóa dữ liệu đã đọc khỏi localStorage
           localStorage.removeItem("newlyAddedBookings");
         }
       }
-    } catch (error) {
-      console.error("Lỗi khi đọc lịch hẹn từ localStorage:", error);
-      // Xóa nếu dữ liệu bị lỗi
+    } catch (err) {
+      console.error("Lỗi khi đọc lịch hẹn từ localStorage:", err);
+      setError("Không thể đọc dữ liệu lịch hẹn từ bộ nhớ. Dữ liệu có thể đã bị hỏng.");
       localStorage.removeItem("newlyAddedBookings");
     }
-  }, []); // Chỉ chạy một lần khi component mount
+  }, []);
 
-  // --- Các hàm xử lý khác (giữ nguyên) ---
+  useEffect(() => {
+    if (error) {
+      setIsModalOpen(true);
+    }
+  }, [error]);
+
   const goBack = () => {
     navigate(-1);
   };
+
   const handleClearDone = () => {
     setItems((prev) => prev.filter((item) => item.status !== "done"));
   };
+
   const handleCancelAppointment = (id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id));
     console.log(`Hủy lịch hẹn có ID: ${id}`);
   };
+
   const handleReminderChange = (id: string, checked: boolean) => {
     setItems((prev) =>
       prev.map((item) =>
@@ -116,7 +118,6 @@ export default function Notifications() {
     console.log(`Thay đổi nhắc nhở cho ID ${id} thành ${checked}`);
   };
 
-  // --- Logic lọc (giữ nguyên) ---
   const filteredItems = items.filter(
     (item) =>
       item.branch.toLowerCase().includes(search.toLowerCase()) ||
@@ -231,6 +232,27 @@ export default function Notifications() {
           </Button>
         )}
       </div>
+
+      {/* Modal hiển thị lỗi */}
+      <Modal
+        visible={isModalOpen}
+        title="Lỗi"
+        onClose={() => {
+          setIsModalOpen(false);
+          setError(null);
+        }}
+        description={error || "Đã có lỗi xảy ra."}
+      >
+        <ZmpButton
+          variant="primary"
+          onClick={() => {
+            setIsModalOpen(false);
+            setError(null);
+          }}
+        >
+          OK
+        </ZmpButton>
+      </Modal>
     </div>
   );
 }

@@ -1,13 +1,19 @@
-// src/pages/LoginScreen.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, AlertCircle } from "lucide-react";
+import axios, { AxiosError } from "axios";
+import { API_BASE_URL } from "../config/api";
+import { useAuth } from "../contexts/AuthContext";
+import { Modal, Button } from "zmp-ui";
 
 const LoginScreen = () => {
-  const [phoneNumber, setPhoneNumber] = useState(""); // Thêm state cho số điện thoại
-  const [password, setPassword] = useState(""); // Thêm state cho mật khẩu
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -22,27 +28,52 @@ const LoginScreen = () => {
   };
 
   const goBack = () => {
-    navigate(-1);
+    navigate("/");
   };
 
-  // --- Hàm xử lý đăng nhập ---
-  const handleLogin = () => {
-    // --- BẮT ĐẦU PHẦN GIẢ LẬP XÁC THỰC ---
-    // Trong ứng dụng thực tế, bạn sẽ gọi API ở đây để kiểm tra phoneNumber và password
-    console.log("Đăng nhập với:", { phoneNumber, password });
-    // Giả sử đăng nhập thành công
-    const isLoggedIn = true; // Thay bằng logic kiểm tra thực tế
-    // --- KẾT THÚC PHẦN GIẢ LẬP XÁC THỰC ---
+  const handleLogin = async () => {
+    try {
+      setError(null);
+      const response = await axios.post(`${API_BASE_URL}/api/login`, {
+        phone_number: phoneNumber,
+        password: password,
+      });
+      if (response.status === 200) {
+        const { token, role, userId, full_name, branchId } = response.data;
 
-    if (isLoggedIn) {
-      // Nếu đăng nhập thành công, chuyển đến trang Home
-      navigate("/home"); // Điều hướng đến trang Home
-    } else {
-      // Xử lý khi đăng nhập thất bại (ví dụ: hiển thị thông báo lỗi)
-      alert("Số điện thoại hoặc mật khẩu không đúng!");
+        const userData = {
+          id: userId ? userId.toString() : "unknown",
+          name: full_name || "User",
+          phone: phoneNumber,
+          role: role || "customer",
+          branchId: branchId ? branchId.toString() : "unknown",
+        };
+        console.log("User data being saved:", userData);
+        login(userData, token);
+        if (role === "admin") {
+          navigate("/admin");
+        } else if (role === "branch_manager") {
+          navigate("/admin");
+        } else {
+          navigate("/home");
+        }
+      }
+    } catch (err) {
+      const error = err as AxiosError<{ message?: string }>;
+      if (error.response) {
+        const message = error.response.data?.message || "Đã có lỗi xảy ra";
+        setError(message);
+      } else {
+        setError("Không thể kết nối đến server. Vui lòng kiểm tra lại kết nối.");
+      }
     }
   };
-  // --- Kết thúc hàm xử lý đăng nhập ---
+
+  useEffect(() => {
+    if (error) {
+      setIsModalOpen(true);
+    }
+  }, [error]);
 
   return (
     <div className="relative flex flex-col h-full">
@@ -51,35 +82,36 @@ const LoginScreen = () => {
         className="absolute top-7 left-4 z-10 flex items-center gap-2 text-base text-white hover:text-gray-200 px-3 py-2 rounded"
       >
         <ChevronLeft size={25} />
-        <span className="text-lg font-medium">Quay lại</span>
+        <span className="text-lg font-medium" style={{ color: "GrayText" }}>
+          Quay lại
+        </span>
       </button>
 
       <div className="bg-gray-200 flex items-center justify-center h-[50%]">
         <img
-          src="/images/taoanhdep_ghibli_15139.jpeg"
+          src="/images/bg_start.jpg"
+          style={{ objectFit: "cover", width: "100%", height: "100%" }}
           alt="Ảnh"
-          className="h-full w-full object-cover"
+          className="h-full w-full"
         />
       </div>
 
       <div className="bg-white flex-1 rounded-t-3xl p-4 overflow-y-auto">
         <h1 className="text-3xl font-bold mb-4 text-center">Đăng nhập</h1>
-        {/* Cập nhật input số điện thoại */}
         <input
-          type="tel" // Nên dùng type="tel" cho số điện thoại
+          type="tel"
           placeholder="Số điện thoại"
-          value={phoneNumber} // Liên kết với state
-          onChange={(e) => setPhoneNumber(e.target.value)} // Cập nhật state khi thay đổi
-          className="border-b w-full p-2 mb-4 outline-none focus:border-orange-400" // Thêm focus style
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+          className="border-b w-full p-2 mb-4 outline-none focus:border-orange-400"
         />
-        {/* Cập nhật input mật khẩu */}
         <div className="relative mb-4">
           <input
             type={showPassword ? "text" : "password"}
             placeholder="Mật khẩu"
-            value={password} // Liên kết với state
-            onChange={(e) => setPassword(e.target.value)} // Cập nhật state khi thay đổi
-            className="border-b w-full p-2 pr-20 outline-none focus:border-orange-400" // Thêm focus style
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border-b w-full p-2 pr-20 outline-none focus:border-orange-400"
           />
           <button
             type="button"
@@ -89,7 +121,6 @@ const LoginScreen = () => {
             {showPassword ? "Ẩn" : "Hiện"}
           </button>
         </div>
-
         <div className="flex justify-between items-center text-sm text-gray-500 mb-4">
           <button
             onClick={handleNavigateToRegister}
@@ -104,10 +135,8 @@ const LoginScreen = () => {
             Quên mật khẩu?
           </button>
         </div>
-
-        {/* Cập nhật nút Đăng nhập */}
         <button
-          onClick={handleLogin} // Gắn hàm xử lý đăng nhập vào sự kiện onClick
+          onClick={handleLogin}
           className="bg-orange-400 hover:bg-orange-500 text-white py-2 w-full rounded"
         >
           Đăng nhập
@@ -132,6 +161,35 @@ const LoginScreen = () => {
           </button>
         </div>
       </div>
+
+      <Modal
+        visible={isModalOpen}
+        title="Thông báo lỗi"
+        onClose={() => {
+          setIsModalOpen(false);
+          setError(null);
+        }}
+        zIndex={1200}
+        className="rounded-xl"
+      >
+        <div className="p-6 text-center bg-white rounded-xl shadow-lg">
+          <div className="flex justify-center mb-4">
+            <AlertCircle size={40} className="text-red-500" />
+          </div>
+          <h3 className="text-lg font-semibold text-red-600 mb-2">Có lỗi xảy ra</h3>
+          <p className="text-gray-600 mb-6">{error || "Đã có lỗi xảy ra."}</p>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setIsModalOpen(false);
+              setError(null);
+            }}
+            className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-colors duration-200"
+          >
+            Đóng
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 };
