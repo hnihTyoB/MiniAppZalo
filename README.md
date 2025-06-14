@@ -19,12 +19,19 @@
 
 ## 🔧 Tính năng chính
 
-- Đăng ký, đăng nhập người dùng (xác thực bằng JWT)
-- Quản lý tài khoản cá nhân và phương tiện
-- Tìm kiếm, xem thông tin chi nhánh và dịch vụ
-- Đặt lịch hẹn sửa chữa (chọn xe – chi nhánh – dịch vụ – thời gian – ghi chú)
-- Xem lịch sử hẹn và hủy lịch khi cần
-- Mô phỏng thông báo từ garage qua Zalo OA
+### Khách hàng:
+- Quản lý tài khoản, phương tiện cá nhân.
+- Xem danh sách dịch vụ, chi nhánh và chi tiết.
+- Đặt lịch hẹn dịch vụ, Xem lịch sử đặt lịch.
+- Nhận thông báo, chat qua Zalo OA.
+### Quản lý chi nhánh:
+- Xem tổng quan hoạt động.
+- Quản lý nhân viên.
+- Quản lý và duyệt lịch hẹn.
+- Cấu hình thông tin chi nhánh.
+### Phân quyền người dùng:
+- Customer.
+- Branch Manager.
 
 ---
 
@@ -82,6 +89,7 @@
    zmp login
    zmp deploy
    ```
+
 ---
 
 ## 📚 Tài liệu & Cộng đồng
