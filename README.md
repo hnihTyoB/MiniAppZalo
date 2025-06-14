@@ -1,56 +1,96 @@
-HEAD
+# 🚗 G2 Schedule a Car Repair – Zalo Mini App
 
-# Zalo Mini App
+**G2 Schedule a Car Repair** là một ứng dụng đặt lịch sửa chữa ô tô được xây dựng trên nền tảng **Zalo Mini App**. Ứng dụng giúp khách hàng dễ dàng tìm kiếm dịch vụ, đặt lịch sửa xe và nhận thông báo trực tiếp từ garage thông qua Zalo OA.
 
-## Development
+> ✅ Đây là sản phẩm đồ án học phần, bao gồm cả **frontend Mini App** và **backend API**.
 
-### Using Zalo Mini App Extension
+## 📺 Demo
 
-1. Install [Visual Studio Code](https://code.visualstudio.com/download) and [Zalo Mini App Extension](https://mini.zalo.me/docs/dev-tools).
-1. In the **Home** tab, process **Config App ID** and **Install Dependencies**.
-1. Navigate to the **Run** tab, select the suitable launcher, and click **Start**.
+🎥 Xem video giới thiệu và demo sử dụng Mini App tại:  
+👉 [https://youtu.be/wFBR3SgraXY](https://youtu.be/wFBR3SgraXY)
 
-### Using Zalo Mini App CLI
+📦 Source code:  
+👉 [https://github.com/hnihTyoB/MiniAppZalo](https://github.com/hnihTyoB/MiniAppZalo)
 
-1. [Install Node JS](https://nodejs.org/en/download/).
-1. [Install Zalo Mini App CLI](https://mini.zalo.me/docs/dev-tools/cli/intro/).
-1. **Install dependencies**:
+📘 Facebook tác giả:  
+👉 [https://facebook.com/thinhnguyen.dev](https://facebook.com/thinhnguyen.dev)
+
+---
+
+## 🔧 Tính năng chính
+
+- Đăng ký, đăng nhập người dùng (xác thực bằng JWT)
+- Quản lý tài khoản cá nhân và phương tiện
+- Tìm kiếm, xem thông tin chi nhánh và dịch vụ
+- Đặt lịch hẹn sửa chữa (chọn xe – chi nhánh – dịch vụ – thời gian – ghi chú)
+- Xem lịch sử hẹn và hủy lịch khi cần
+- Mô phỏng thông báo từ garage qua Zalo OA
+
+---
+
+## 🛠️ Công nghệ sử dụng
+
+### Frontend – Zalo Mini App (ZMP)
+- React + TypeScript
+- Tailwind CSS
+- ZMP UI + Lucide React
+- React Router DOM
+
+### Backend – REST API
+- Node.js + Express.js
+- MySQL (qua `mysql2`)
+- JSON Web Token (JWT), Bcrypt, Dotenv, Cors
+
+---
+
+## ⚙️ Development Guide
+
+### Sử dụng Zalo Mini App CLI
+
+1. [Cài Node.js](https://nodejs.org/en/download)
+2. [Cài Zalo Mini App CLI](https://mini.zalo.me/docs/dev-tools/cli/intro/)
+3. Cài đặt các thư viện phụ thuộc:
+
    ```bash
    npm install
-   ```
-1. **Start** the dev server:
+4. Khởi động server:
+
    ```bash
    zmp start
-   ```
-1. **Open** `localhost:3000` in your browser.
+5. Mở trình duyệt tại:
 
-## Deployment
+   ```bash
+   http://localhost:3000
 
-1. **Create** a mini program. For instructions on how to create a mini program, please refer to the [Coffee Shop Tutorial](https://mini.zalo.me/tutorial/coffee-shop/step-1/)
+---
 
-1. **Deploy** your mini program to Zalo using the mini app ID created.
+## 🚀 Triển khai
 
-   - **Using Zalo Mini App Extension**: navigate to the **Deploy** panel > **Login** > **Deploy**.
-   - **Using Zalo Mini App CLI**:
-     ```bash
-     zmp login
-     zmp deploy
-     ```
+1. Tạo Mini App ID trên Zalo Developer Console  
+   (Xem hướng dẫn: [Coffee Shop Tutorial](https://mini.zalo.me/tutorial/coffee-shop/step-1/))
 
-1. Open the mini app in Zalo by scanning the QR code.
+2. Deploy bằng một trong hai cách:
 
-## Resources
+### 🔸 Dùng Zalo Mini App Extension:
+- Mở tab **Deploy**
+- Đăng nhập
+- Nhấn **Deploy**
 
-- [Zalo Mini App Official Website](https://mini.zalo.me/)
-- [ZaUI Documentation](https://mini.zalo.me/documents/zaui/)
-- [ZMP SDK Documentation](https://mini.zalo.me/documents/api/)
-- [DevTools Documentation](https://mini.zalo.me/docs/dev-tools/)
-- [Ready-made Mini App Templates](https://mini.zalo.me/zaui-templates)
-- [Community Support](https://mini.zalo.me/community)
+### 🔸 Dùng CLI:
 
-# ZaloMiniApp
+   ```bash
+   zmp login
+   zmp deploy
 
-4e8cf6f4d620c12ac5328f65cc138836fd6c03e9
-"# ZaloMiniApp" 
-"# MiniAppZalo" 
-"# MiniAppZalo" 
+## 📚 Tài liệu & Cộng đồng
+
+- [Zalo Mini App Developer Site](https://mini.zalo.me/)
+- [ZMP SDK API Docs](https://mini.zalo.me/documents/api/)
+- [ZMP UI (ZaUI) Docs](https://mini.zalo.me/documents/zaui/)
+- [Dev Tools & CLI Docs](https://mini.zalo.me/docs/dev-tools/)
+- [Template Mini Apps](https://mini.zalo.me/zaui-templates)
+- [Cộng đồng hỗ trợ](https://mini.zalo.me/community)
+
+---
+
+> 🧠 Đây là tài liệu README chính thức của đồ án. Nếu bạn thấy dự án hữu ích, đừng quên ⭐️ repo để ủng hộ!
