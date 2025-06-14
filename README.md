@@ -81,6 +81,8 @@
    ```bash
    zmp login
    zmp deploy
+   ```
+---
 
 ## 📚 Tài liệu & Cộng đồng
 
