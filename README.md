@@ -9,11 +9,15 @@
 🎥 Xem video giới thiệu và demo sử dụng Mini App tại:  
 [![Xem video demo trên YouTube](https://img.youtube.com/vi/wFBR3SgraXY/0.jpg)](https://youtu.be/wFBR3SgraXY)
 
-📦 Source code:  
-👉 [https://github.com/hnihTyoB/MiniAppZalo](https://github.com/hnihTyoB/MiniAppZalo)
-
-📘 Facebook tác giả:  
+📘 Facebook:  
 👉 [https://facebook.com/thinhnguyen.dev](https://facebook.com/thinhnguyen.dev)
+
+---
+
+## 👥 Người đóng góp
+
+- 👨‍💻 [@hnihTyoB](https://github.com/hnihTyoB) – Frontend, UI/UX, tích hợp Mini App Zalo  
+- 🧠 [@HaiTrieu186](https://github.com/HaiTrieu186) – Backend API, MySQL, xử lý xác thực  
 
 ---
 
