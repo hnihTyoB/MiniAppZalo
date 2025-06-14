@@ -10,7 +10,7 @@
 [![Xem video demo trên YouTube](https://img.youtube.com/vi/wFBR3SgraXY/0.jpg)](https://youtu.be/wFBR3SgraXY)
 
 📘 Facebook:  
-👉 [https://facebook.com/thinhnguyen.dev](https://facebook.com/thinhnguyen.dev)
+👉 [https://facebook.com/thinhnguyen.dev](https://www.facebook.com/nguyen.chi.thinh.74213)
 
 ---
 
