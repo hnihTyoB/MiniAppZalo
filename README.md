@@ -7,7 +7,7 @@
 ## 📺 Demo
 
 🎥 Xem video giới thiệu và demo sử dụng Mini App tại:  
-👉 [https://youtu.be/wFBR3SgraXY](https://youtu.be/wFBR3SgraXY)
+👉 [![Xem video demo trên YouTube](https://img.youtube.com/vi/wFBR3SgraXY/0.jpg)](https://youtu.be/wFBR3SgraXY)
 
 📦 Source code:  
 👉 [https://github.com/hnihTyoB/MiniAppZalo](https://github.com/hnihTyoB/MiniAppZalo)
