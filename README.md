@@ -7,7 +7,7 @@
 ## 📺 Demo
 
 🎥 Xem video giới thiệu và demo sử dụng Mini App tại:  
-[![Xem video demo trên YouTube](https://img.youtube.com/vi/wFBR3SgraXY/0.jpg)](https://youtu.be/wFBR3SgraXY)
+[![Xem video demo trên YouTube](https://img.youtube.com/vi/oYO3Z7oaFR0/0.jpg)](https://youtu.be/oYO3Z7oaFR0?si=1mclkfvUetOcawQl)
 
 📘 Facebook:  
 👉 [https://facebook.com/thinhnguyen.dev](https://www.facebook.com/nguyen.chi.thinh.74213)
